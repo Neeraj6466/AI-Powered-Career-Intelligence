@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AI Resume Analysis</title>
+
+    <!-- Bootstrap -->
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Google Font -->
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Chart.js -->
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Custom CSS -->
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/result.css') }}">
+
+</head>
+
+<body>
+
+<div class="main-container">
+
+    <!-- Sidebar -->
+
+    <aside class="sidebar">
+
+        <h2 class="logo">
+            🤖 AI Career
+        </h2>
+
+        <ul>
+
+            <li>
+                <a href="/dashboard">
+                    <i class="bi bi-house"></i>
+                    Dashboard
+                </a>
+            </li>
+
+            <li>
+                <a href="/history">
+                    <i class="bi bi-clock-history"></i>
+                    History
+                </a>
+            </li>
+
+            <li>
+                <a href="/logout">
+                    <i class="bi bi-box-arrow-right"></i>
+                    Logout
+                </a>
+            </li>
+
+        </ul>
+
+    </aside>
+
+    <!-- Main Content -->
+
+    <main class="content">
+
+        <!-- Top Navbar -->
+
+        <div class="topbar">
+
+            <h2>
+                AI Resume Analysis
+            </h2>
+
+            <button id="theme-toggle">
+                🌙
+            </button>
+
+        </div>
+        <!-- AI Analytics Cards -->
+
+<div class="cards">
+
+    <div class="ai-card">
+
+        <i class="bi bi-speedometer2"></i>
+
+        <h4>Resume Score</h4>
+
+        <h2>{{ score }}/100</h2>
+
+    </div>
+
+    <div class="ai-card">
+
+        <i class="bi bi-check-circle-fill"></i>
+
+        <h4>Skills Found</h4>
+
+        <h2>{{ skills|length }}</h2>
+
+    </div>
+
+    <div class="ai-card">
+
+        <i class="bi bi-briefcase-fill"></i>
+
+        <h4>Career</h4>
+
+        <h2>{{ career }}</h2>
+
+    </div>
+
+    <div class="ai-card">
+
+        <i class="bi bi-currency-rupee"></i>
+
+        <h4>Expected Salary</h4>
+
+        <h2>{{ salary }}</h2>
+
+    </div>
+
+</div>
+
+<!-- Charts -->
+
+<div class="chart-container">
+
+    <div class="chart-card">
+
+        <h3>📊 Resume Analytics</h3>
+
+        <canvas id="resumeChart"></canvas>
+
+    </div>
+
+    <div class="chart-card">
+
+        <h3>🥧 Skills Overview</h3>
+
+        <canvas id="skillChart"></canvas>
+
+    </div>
+
+</div>
+<!-- ===========================
+     AI Analysis Section
+=========================== -->
+
+<div class="analysis-grid">
+
+    <!-- ATS Resume Score -->
+
+    <div class="analysis-card">
+
+        <h3>📊 ATS Resume Score</h3>
+
+        <h2>{{ ats_score }}/100</h2>
+
+        <h4>Suggestions</h4>
+
+        <ul>
+            {% for item in ats_feedback %}
+                <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
+
+    </div>
+
+    <!-- Resume Keyword Matching -->
+
+    <div class="analysis-card">
+
+        <h3>🔑 Resume Keyword Matching</h3>
+
+        <h4>✅ Matched Keywords</h4>
+
+        <ul>
+            {% for keyword in matched_keywords %}
+                <li>{{ keyword }}</li>
+            {% endfor %}
+        </ul>
+
+        <h4>❌ Missing Keywords</h4>
+
+        <ul>
+            {% for keyword in missing_keywords %}
+                <li>{{ keyword }}</li>
+            {% endfor %}
+        </ul>
+
+    </div>
+
+    <div class="analysis-card">
+
+    <h3>📋 Resume Completeness</h3>
+
+    <h2>{{ completeness_score }}%</h2>
+
+    <ul>
+        {% for section, status in resume_sections.items() %}
+            <li>
+                {% if status %}
+                    ✅ {{ section }}
+                {% else %}
+                    ❌ {{ section }}
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+
+</div>
+
+<div class="analysis-card">
+
+    <h3>⚠️ Missing Sections</h3>
+
+    {% if missing_sections %}
+        <ul>
+            {% for section in missing_sections %}
+                <li>❌ {{ section }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>🎉 Your resume contains all major sections.</p>
+    {% endif %}
+
+</div>
+<div class="analysis-card">
+
+    <h3>🤝 Soft Skills</h3>
+
+    <ul>
+        {% for skill in soft_skills %}
+            <li>✅ {{ skill }}</li>
+        {% endfor %}
+    </ul>
+
+</div>
+<div class="analysis-card">
+
+    <h3>💼 Experience</h3>
+
+    <h2>{{ experience }}</h2>
+
+</div>
+<div class="analysis-card">
+
+    <h3>🌐 Profiles</h3>
+
+    <p>
+        <strong>LinkedIn:</strong><br>
+
+        {% if linkedin != "Not Found" %}
+            <a href="{{ linkedin }}" target="_blank">{{ linkedin }}</a>
+        {% else %}
+            Not Found
+        {% endif %}
+    </p>
+
+    <hr>
+
+    <p>
+        <strong>GitHub:</strong><br>
+
+        {% if github != "Not Found" %}
+            <a href="{{ github }}" target="_blank">{{ github }}</a>
+        {% else %}
+            Not Found
+        {% endif %}
+    </p>
+
+</div>
+<div class="analysis-card">
+
+    <h3>🌍 Languages</h3>
+
+    <ul>
+        {% for language in languages %}
+            <li>🌐 {{ language }}</li>
+        {% endfor %}
+    </ul>
+
+</div>
+
+
+    <!-- AI Resume Assistant -->
+
+    <div class="analysis-card">
+
+        <h3>🤖 AI Resume Assistant</h3>
+
+        <div class="ai-box">
+            <pre>{{ ai_analysis }}</pre>
+        </div>
+
+    </div>
+
+</div>
+
+    <!-- Missing Skills -->
+
+    <div class="analysis-card">
+
+        <h3>❌ Missing Skills</h3>
+
+        <ul>
+
+            {% if missing_skills %}
+
+                {% for skill in missing_skills %}
+
+                    <li class="missing-skill">
+
+                        ❌ {{ skill }}
+
+                    </li>
+
+                {% endfor %}
+
+            {% else %}
+
+                <li>🎉 No Missing Skills</li>
+
+            {% endif %}
+
+        </ul>
+
+    </div>
+
+</div>
+
+<!-- ===========================
+     Recommended Courses
+=========================== -->
+
+<div class="analysis-card">
+
+    <h3>📚 Recommended Courses</h3>
+
+    <div class="course-grid">
+
+        {% for course in courses %}
+
+        <div class="course-card">
+
+            <i class="bi bi-book-fill"></i>
+
+            <h4>{{ course }}</h4>
+
+            <div class="course-card">
+
+    <i class="bi bi-book-fill"></i>
+
+    <h4>{{ course }}</h4>
+
+    {% if "TensorFlow" in course %}
+        <a href="https://www.coursera.org/learn/introduction-tensorflow" target="_blank">
+            <button class="course-btn">Learn More</button>
+        </a>
+
+    {% elif "PyTorch" in course %}
+        <a href="https://www.coursera.org/learn/deep-neural-networks-with-pytorch" target="_blank">
+            <button class="course-btn">Learn More</button>
+        </a>
+
+    {% elif "Docker" in course %}
+        <a href="https://www.docker.com/101-tutorial/" target="_blank">
+            <button class="course-btn">Learn More</button>
+        </a>
+
+    {% elif "Python" in course %}
+        <a href="https://www.coursera.org/specializations/python" target="_blank">
+            <button class="course-btn">Learn More</button>
+        </a>
+
+    {% elif "Flask" in course %}
+        <a href="https://flask.palletsprojects.com/en/stable/tutorial/" target="_blank">
+            <button class="course-btn">Learn More</button>
+        </a>
+
+    {% elif "SQL" in course %}
+        <a href="https://www.w3schools.com/sql/" target="_blank">
+            <button class="course-btn">Learn More</button>
+        </a>
+
+    {% elif "Machine Learning" in course %}
+        <a href="https://www.coursera.org/learn/machine-learning" target="_blank">
+            <button class="course-btn">Learn More</button>
+        </a>
+
+    {% else %}
+        <button class="course-btn" disabled>
+            Coming Soon
+        </button>
+    {% endif %}
+
+</div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+<!-- ===========================
+     Resume Text
+=========================== -->
+
+<div class="analysis-card">
+
+    <h3>📄 Extracted Resume</h3>
+
+    <pre>{{ resume_text }}</pre>
+
+</div>
+
+<!-- ===========================
+     Download Button
+=========================== -->
+
+<div class="download-section">
+
+    <a href="/download-report">
+
+        <button class="download-btn">
+
+            📄 Download AI Report
+
+        </button>
+
+    </a>
+
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script src="{{ url_for('static', filename='js/result.js') }}"></script>
+
+</main>
+
+</div>
+
+</body>
+
+</html>

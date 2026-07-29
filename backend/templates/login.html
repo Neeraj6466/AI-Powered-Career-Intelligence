@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - AI Career Intelligence</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div class="login-page">
+    <div class="login-container">
+        <h2 class="text-center mb-4">🤖 Welcome Back</h2>
+        
+        <form action="/login" method="POST">
+            <div class="mb-3">
+                <label class="form-label fw-medium">Email Address</label>
+                <input 
+                    type="email" 
+                    name="email" 
+                    class="form-control" 
+                    placeholder="name@example.com" 
+                    required
+                >
+            </div>
+            
+            <div class="mb-4">
+                <label class="form-label fw-medium">Password</label>
+                <div class="input-group">
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        class="form-control" 
+                        placeholder="Enter password" 
+                        required
+                    >
+                    <button 
+                        class="btn btn-outline-secondary bg-white text-dark" 
+                        type="button" 
+                        onclick="togglePasswordVisibility()"
+                        style="border-top-right-radius: 12px; border-bottom-right-radius: 12px;"
+                    >
+                        <i id="toggle-icon" class="bi bi-eye"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary w-100 py-2.5 fw-bold mb-3">
+                Sign In
+            </button>
+        </form>
+        
+        <hr class="my-4">
+        
+        <div class="text-center">
+            <span class="opacity-75">Don't have an account?</span> 
+            <a href="/register" class="fw-bold ms-1 text-white decoration-none">Register Here</a>
+        </div>
+    </div>
+</div>
+
+<script>
+function togglePasswordVisibility() {
+    const passwordField = document.getElementById("password");
+    const toggleIcon = document.getElementById("toggle-icon");
+    
+    if (passwordField.type === "password") {
+        passwordField.type = "text";
+        toggleIcon.classList.remove("bi-eye");
+        toggleIcon.classList.add("bi-eye-slash");
+    } else {
+        passwordField.type = "password";
+        toggleIcon.classList.remove("bi-eye-slash");
+        toggleIcon.classList.add("bi-eye");
+    }
+}
+</script>
+
+<script src="{{ url_for('static', filename='js/darkmode.js') }}"></script>
+
+</body>
+</html>
