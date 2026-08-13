@@ -126,7 +126,25 @@ def login():
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    return render_template("dashboard.html", user_name=session.get("user_name"))
+    resume_score = session.get("resume_score", 0)
+    ats_score = session.get("ats_score", 0)
+    career = session.get("career", "Not Available")
+    salary = session.get("salary", "Not Available")
+    job_match = session.get("job_match", 0)
+    matching_skills = session.get("matching_skills", [])
+    jd_missing_skills = session.get("jd_missing_skills", [])
+
+    return render_template(
+        "dashboard.html",
+        fullname=session.get("user_name"),
+        resume_score=resume_score,
+        ats_score=ats_score,
+        career=career,
+        salary=salary,
+        job_match=job_match,
+        matching_skills=matching_skills,
+        jd_missing_skills=jd_missing_skills
+    )
 
 # ---------------- ATS ANALYSIS ----------------
 
@@ -377,6 +395,7 @@ def upload():
         return "No file selected!"
 
     file = request.files["resume"]
+    job_description = request.form.get("job_description", "")
 
     if file.filename == "":
         return "No file selected!"
@@ -394,6 +413,21 @@ def upload():
     if not resume_text.strip():
         return "Unable to extract text from the resume."
 
+    # Job Description Matching
+    job_match = 0
+    matching_skills = []
+    jd_missing_skills = []
+
+    if job_description.strip():
+        job_match, matching_skills, jd_missing_skills = calculate_match(
+            resume_text,
+            job_description
+        )
+
+    session["job_match"] = job_match
+    session["matching_skills"] = matching_skills
+    session["jd_missing_skills"] = jd_missing_skills
+        
     # Extract Skills
     skills = extract_skills(resume_text)
 
@@ -438,6 +472,12 @@ def upload():
 
     # Resume Score
     score = min(len(skills) * 5, 100)
+    
+    # Save data for Dashboard Analytics
+    session["resume_score"] = score
+    session["ats_score"] = ats_score
+    session["career"] = career
+    session["salary"] = salary
 
     # ---------------- SAVE USER HISTORY ----------------
     connection = sqlite3.connect(DATABASE)
@@ -481,6 +521,8 @@ def upload():
     salary=salary,
     skills=skills,
     missing_skills=missing_skills,
+    matching_skills=matching_skills,
+    jd_missing_skills=jd_missing_skills,
     courses=courses,
     ai_analysis=ai_analysis,
     ats_score=ats_score,

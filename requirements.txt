@@ -1,0 +1,7 @@
+Flask
+bcrypt
+Werkzeug
+python-dotenv
+google-generativeai
+PyPDF2
+reportlab
