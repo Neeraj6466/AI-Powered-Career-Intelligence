@@ -884,6 +884,543 @@ def logout():
     return redirect(url_for("home"))
 
 
+    # ---------------- INTERVIEW TOPIC ----------------
+
+@app.route("/interview-topic/<topic>")
+@login_required
+def interview_topic(topic):
+
+    interview_data = {
+        "python": [
+
+{"question":"What is Python?","answer":"Python is a high-level, interpreted programming language."},
+
+{"question":"What are the features of Python?","answer":"Easy syntax, interpreted, object-oriented, portable and open-source."},
+
+{"question":"What is List?","answer":"A List is a mutable collection in Python."},
+
+{"question":"What is Tuple?","answer":"Tuple is an immutable collection."},
+
+{"question":"Difference between List and Tuple?","answer":"List can be modified, Tuple cannot."},
+
+{"question":"What is Dictionary?","answer":"Dictionary stores data as key-value pairs."},
+
+{"question":"What is Set?","answer":"Set stores unique values only."},
+
+{"question":"What is Function?","answer":"A reusable block of code."},
+
+{"question":"What is Lambda Function?","answer":"An anonymous function created using lambda keyword."},
+
+{"question":"What is Recursion?","answer":"A function calling itself."}
+
+],
+        "machine-learning": [
+
+{"question":"What is Machine Learning?","answer":"Machine Learning is a branch of AI that enables computers to learn from data without being explicitly programmed."},
+
+{"question":"What are the types of Machine Learning?","answer":"Supervised Learning, Unsupervised Learning and Reinforcement Learning."},
+
+{"question":"What is Supervised Learning?","answer":"It is a learning method that uses labeled training data."},
+
+{"question":"What is Unsupervised Learning?","answer":"It is a learning method that finds hidden patterns from unlabeled data."},
+
+{"question":"What is Reinforcement Learning?","answer":"An agent learns by interacting with an environment using rewards and penalties."},
+
+{"question":"What is Overfitting?","answer":"A model performs well on training data but poorly on unseen data."},
+
+{"question":"What is Underfitting?","answer":"A model is too simple and performs poorly on both training and testing data."},
+
+{"question":"What is a Dataset?","answer":"A collection of data used for training and testing machine learning models."},
+
+{"question":"What is Feature Engineering?","answer":"The process of selecting and transforming variables to improve model performance."},
+
+{"question":"What is Cross Validation?","answer":"A technique used to evaluate machine learning models using multiple data splits."}
+
+],
+        "deep-learning": [
+
+{"question":"What is Deep Learning?","answer":"Deep Learning is a subset of Machine Learning that uses neural networks with multiple hidden layers."},
+
+{"question":"What is an Artificial Neural Network (ANN)?","answer":"ANN is a computing model inspired by the human brain, consisting of interconnected neurons."},
+
+{"question":"What is a Perceptron?","answer":"A Perceptron is the simplest type of neural network used for binary classification."},
+
+{"question":"What is a Hidden Layer?","answer":"A hidden layer is the layer between the input and output layers where feature learning happens."},
+
+{"question":"What is an Activation Function?","answer":"It decides whether a neuron should be activated. Examples include ReLU, Sigmoid, and Tanh."},
+
+{"question":"What is ReLU?","answer":"ReLU (Rectified Linear Unit) returns x if x > 0, otherwise 0."},
+
+{"question":"What is Backpropagation?","answer":"Backpropagation updates neural network weights by minimizing prediction error."},
+
+{"question":"What is CNN?","answer":"Convolutional Neural Networks are mainly used for image processing and computer vision."},
+
+{"question":"What is RNN?","answer":"Recurrent Neural Networks are designed for sequential data such as text and speech."},
+
+{"question":"What is LSTM?","answer":"Long Short-Term Memory is a special type of RNN that remembers long-term dependencies."}
+
+],
+        "sql": [
+
+{"question":"What is SQL?","answer":"SQL (Structured Query Language) is used to store, retrieve, update and manage data in relational databases."},
+
+{"question":"What is the difference between SQL and MySQL?","answer":"SQL is a language, while MySQL is a relational database management system."},
+
+{"question":"What is a Primary Key?","answer":"A Primary Key uniquely identifies each record in a table."},
+
+{"question":"What is a Foreign Key?","answer":"A Foreign Key creates a relationship between two tables."},
+
+{"question":"What is the difference between DELETE, DROP and TRUNCATE?","answer":"DELETE removes selected rows, TRUNCATE removes all rows, DROP removes the entire table."},
+
+{"question":"What is a JOIN?","answer":"A JOIN combines rows from two or more tables based on a related column."},
+
+{"question":"Types of JOINs?","answer":"INNER JOIN, LEFT JOIN, RIGHT JOIN, FULL JOIN and CROSS JOIN."},
+
+{"question":"What is a View?","answer":"A View is a virtual table created using an SQL query."},
+
+{"question":"What is Normalization?","answer":"Normalization reduces data redundancy and improves database efficiency."},
+
+{"question":"What is an Index?","answer":"An Index improves the speed of data retrieval operations."}
+
+],
+        "tensorflow": [
+
+{"question":"What is TensorFlow?","answer":"TensorFlow is an open-source machine learning framework developed by Google for building and training deep learning models."},
+
+{"question":"Who developed TensorFlow?","answer":"TensorFlow was developed by the Google Brain team."},
+
+{"question":"What are the main features of TensorFlow?","answer":"Open-source, scalable, supports CPU/GPU/TPU, automatic differentiation, and production deployment."},
+
+{"question":"What is a Tensor?","answer":"A Tensor is a multi-dimensional array and is the basic data structure used in TensorFlow."},
+
+{"question":"What is TensorFlow Keras?","answer":"TensorFlow Keras is the high-level API used to build and train deep learning models easily."},
+
+{"question":"What is Sequential Model?","answer":"A Sequential Model is a linear stack of layers where each layer has one input and one output."},
+
+{"question":"What are Epochs in TensorFlow?","answer":"An epoch is one complete pass of the entire training dataset through the neural network."},
+
+{"question":"What is Batch Size?","answer":"Batch size is the number of training samples processed before updating the model weights."},
+
+{"question":"What is Gradient Descent?","answer":"Gradient Descent is an optimization algorithm used to minimize the loss function during training."},
+
+{"question":"What is TensorBoard?","answer":"TensorBoard is TensorFlow's visualization tool used to monitor training, graphs, and performance metrics."}
+
+],
+        "dbms": [
+
+{"question":"What is DBMS?","answer":"DBMS (Database Management System) is software used to create, store, retrieve, update and manage databases."},
+
+{"question":"What are the advantages of DBMS?","answer":"Reduces redundancy, improves security, ensures data consistency, supports backup and recovery."},
+
+{"question":"What is the difference between DBMS and RDBMS?","answer":"DBMS stores data in files, while RDBMS stores data in related tables using relationships."},
+
+{"question":"What is Normalization?","answer":"Normalization organizes data to reduce redundancy and improve consistency."},
+
+{"question":"What are the normal forms?","answer":"1NF, 2NF, 3NF, BCNF, 4NF and 5NF."},
+
+{"question":"What is a Primary Key?","answer":"A Primary Key uniquely identifies every record in a table."},
+
+{"question":"What is a Foreign Key?","answer":"A Foreign Key creates relationships between two tables."},
+
+{"question":"What is SQL?","answer":"SQL is the language used to communicate with relational databases."},
+
+{"question":"What is ACID Property?","answer":"ACID stands for Atomicity, Consistency, Isolation and Durability."},
+
+{"question":"What is Transaction?","answer":"A transaction is a sequence of database operations executed as a single unit."}
+
+],
+        "operating-system": [
+
+{"question":"What is an Operating System?","answer":"An Operating System (OS) is system software that manages computer hardware, software resources, and provides services for applications."},
+
+{"question":"What are the main functions of an Operating System?","answer":"Process management, memory management, file management, device management, security, and user interface."},
+
+{"question":"What are the types of Operating Systems?","answer":"Batch OS, Time-Sharing OS, Distributed OS, Real-Time OS, Network OS, and Multiprocessing OS."},
+
+{"question":"What is a Process?","answer":"A Process is a program that is currently being executed."},
+
+{"question":"What is a Thread?","answer":"A Thread is the smallest unit of CPU execution within a process."},
+
+{"question":"What is the difference between Process and Thread?","answer":"A Process has its own memory space, whereas threads share the same memory within a process."},
+
+{"question":"What is CPU Scheduling?","answer":"CPU Scheduling is the process of selecting which process gets CPU time next."},
+
+{"question":"What are the types of CPU Scheduling Algorithms?","answer":"FCFS, SJF, Priority Scheduling, Round Robin, and Multilevel Queue Scheduling."},
+
+{"question":"What is Deadlock?","answer":"Deadlock is a situation where two or more processes wait indefinitely for resources held by each other."},
+
+{"question":"What is Virtual Memory?","answer":"Virtual Memory is a memory management technique that uses disk space as an extension of RAM."}
+
+],
+        "computer-networks": [
+
+{"question":"What is a Computer Network?","answer":"A Computer Network is a group of interconnected computers that communicate and share resources."},
+
+{"question":"What are the types of Computer Networks?","answer":"LAN, MAN, WAN, PAN and CAN."},
+
+{"question":"What is the OSI Model?","answer":"OSI (Open Systems Interconnection) is a 7-layer networking model used for communication."},
+
+{"question":"Name the 7 layers of the OSI Model.","answer":"Physical, Data Link, Network, Transport, Session, Presentation and Application."},
+
+{"question":"What is the TCP/IP Model?","answer":"TCP/IP is a networking model consisting of Application, Transport, Internet and Network Access layers."},
+
+{"question":"What is an IP Address?","answer":"An IP Address is a unique address assigned to a device on a network."},
+
+{"question":"What is the difference between TCP and UDP?","answer":"TCP is connection-oriented and reliable, whereas UDP is connectionless and faster."},
+
+{"question":"What is DNS?","answer":"DNS (Domain Name System) translates domain names into IP addresses."},
+
+{"question":"What is HTTP and HTTPS?","answer":"HTTP transfers web pages, while HTTPS is the secure version using SSL/TLS encryption."},
+
+{"question":"What is a Router?","answer":"A Router connects different networks and forwards data packets between them."}
+
+],
+        "number-system": [
+
+{
+"question":"📖 Concept",
+"answer":"A Number System is a way of representing numbers using digits. The most common number system is the Decimal Number System (Base 10)."
+},
+
+{
+"question":"📐 Important Types",
+"answer":"Natural Numbers (1,2,3...), Whole Numbers (0,1,2...), Integers (...,-2,-1,0,1,2...), Rational Numbers, Irrational Numbers, Real Numbers."
+},
+
+{
+"question":"📖 Formula / Trick",
+"answer":"Even Number = Divisible by 2\nOdd Number = Not divisible by 2\nPrime Number = Has exactly two factors (1 and itself)."
+},
+
+{
+"question":"✅ Easy Example",
+"answer":"Is 37 a Prime Number?\n\nFactors of 37 are only 1 and 37.\n\nAnswer: Yes, it is a Prime Number."
+},
+
+{
+"question":"🎯 Interview Question 1",
+"answer":"Find the HCF of 12 and 18.\n\nFactors of 12 = 1,2,3,4,6,12\nFactors of 18 = 1,2,3,6,9,18\n\nAnswer = 6"
+},
+
+{
+"question":"🎯 Interview Question 2",
+"answer":"Find the LCM of 12 and 18.\n\nLCM = 36"
+},
+
+{
+"question":"🎯 Interview Question 3",
+"answer":"Which of the following is an even number?\nA) 25\nB) 48\nC) 67\nD) 91\n\nAnswer = 48"
+},
+
+{
+"question":"📝 Practice Question 1",
+"answer":"Find the HCF of 24 and 36.\n\nAnswer = 12"
+},
+
+{
+"question":"📝 Practice Question 2",
+"answer":"Find the LCM of 15 and 20.\n\nAnswer = 60"
+},
+
+{
+"question":"💡 Shortcut",
+"answer":"To find HCF, list common factors or use prime factorization.\nTo find LCM, use:\nLCM × HCF = Product of the two numbers."
+}
+
+],
+        "percentage": [
+
+{
+"question":"📖 Concept",
+"answer":"Percentage means 'per hundred'. It is used to express a number as a part of 100."
+},
+
+{
+"question":"📐 Formula",
+"answer":"Percentage = (Value / Total Value) × 100"
+},
+
+{
+"question":"✅ Easy Example",
+"answer":"Find 20% of 500.\n\n20/100 × 500 = 100\n\nAnswer = 100"
+},
+
+{
+"question":"🎯 Interview Question 1",
+"answer":"A student scored 360 marks out of 450.\n\nPercentage = (360/450) × 100 = 80%"
+},
+
+{
+"question":"🎯 Interview Question 2",
+"answer":"Increase ₹500 by 10%.\n\n10% of 500 = 50\n\nNew Price = ₹550"
+},
+
+{
+"question":"📝 Practice Question",
+"answer":"A shopkeeper gives a 15% discount on ₹2000.\n\nClick 'Show Answer' to see the solution.\n\nAnswer = ₹300"
+}
+
+],
+        "blood-relations":[
+
+{
+"question":"Who is your father's brother?",
+"answer":"He is your Uncle."
+},
+
+{
+"question":"Who is your mother's sister?",
+"answer":"She is your Aunt."
+},
+
+{
+"question":"Who is your brother's son?",
+"answer":"He is your Nephew."
+},
+
+{
+"question":"Who is your sister's daughter?",
+"answer":"She is your Niece."
+},
+
+{
+"question":"Easy Example",
+"answer":"Ram is the son of Shyam. Shyam is the brother of Ravi. Ravi is Ram's Uncle."
+}
+
+], 
+        "hr-interview":[
+
+{
+"question":"Tell me about yourself.",
+"answer":"Introduce yourself briefly, including your education, skills, projects, and career goals."
+},
+
+{
+"question":"Why should we hire you?",
+"answer":"Explain your strengths, technical skills, willingness to learn, and how you can contribute to the company."
+},
+
+{
+"question":"What are your strengths?",
+"answer":"Example: Quick learner, problem-solving, teamwork, adaptability, and communication."
+},
+
+{
+"question":"What are your weaknesses?",
+"answer":"Mention a genuine weakness and explain how you are improving it."
+},
+
+{
+"question":"Why do you want to join our company?",
+"answer":"Talk about the company's reputation, learning opportunities, and career growth."
+},
+
+{
+"question":"Where do you see yourself in 5 years?",
+"answer":"I want to become a skilled software engineer and contribute to meaningful projects."
+},
+
+{
+"question":"Describe your final-year project.",
+"answer":"Explain the project objective, technologies used, your role, and the outcome."
+},
+
+{
+"question":"Are you willing to relocate?",
+"answer":"Yes, I am open to relocation based on the company's requirements."
+},
+
+{
+"question":"Why did you choose Computer Science?",
+"answer":"Because I enjoy solving problems, programming, and building software solutions."
+},
+
+{
+"question":"Do you have any questions for us?",
+"answer":"Yes. Ask about training, team structure, or career growth opportunities."
+}
+
+], 
+        "general-knowledge":[
+
+{
+"question":"🇮🇳 What is the capital of India?",
+"answer":"New Delhi."
+},
+
+{
+"question":"🌍 Which is the largest continent?",
+"answer":"Asia."
+},
+
+{
+"question":"🏛️ Who is known as the Father of the Indian Constitution?",
+"answer":"Dr. B. R. Ambedkar."
+},
+
+{
+"question":"🛰️ Which organization launched the Chandrayaan missions?",
+"answer":"ISRO (Indian Space Research Organisation)."
+},
+
+{
+"question":"💻 What does CPU stand for?",
+"answer":"Central Processing Unit."
+},
+
+{
+"question":"🌐 What is the full form of WWW?",
+"answer":"World Wide Web."
+},
+
+{
+"question":"🏆 Which country won the 2023 Cricket World Cup?",
+"answer":"Australia."
+},
+
+{
+"question":"🧪 What is the chemical symbol for Gold?",
+"answer":"Au."
+},
+
+{
+"question":"📅 How many states are there in India?",
+"answer":"28 States."
+},
+
+{
+"question":"🚀 Which company developed ChatGPT?",
+"answer":"OpenAI."
+}
+
+], 
+        "company-wise":[
+
+{
+"question":"🏢 TCS Recruitment Process",
+"answer":"Online Aptitude Test → Technical Interview → HR Interview."
+},
+
+{
+"question":"🏢 Infosys Recruitment Process",
+"answer":"Online Assessment → Technical Interview → HR Interview."
+},
+
+{
+"question":"🏢 Wipro Recruitment Process",
+"answer":"Aptitude Test → Coding Test → Technical Interview → HR Interview."
+},
+
+{
+"question":"🏢 Accenture Recruitment Process",
+"answer":"Cognitive Assessment → Coding → Communication Assessment → Technical & HR Interview."
+},
+
+{
+"question":"🏢 Google Recruitment Process",
+"answer":"Resume Screening → Online Assessment → Coding Interviews → System Design → HR."
+},
+
+{
+"question":"🏢 Amazon Recruitment Process",
+"answer":"Online Assessment → Technical Interviews → Leadership Principles Round → HR."
+},
+
+{
+"question":"💻 Technical Preparation",
+"answer":"Prepare DSA, OOPs, DBMS, SQL, OS, Computer Networks and Coding Problems."
+},
+
+{
+"question":"📚 Aptitude Preparation",
+"answer":"Practice Quantitative Aptitude, Logical Reasoning and Verbal Ability."
+},
+
+{
+"question":"👨‍💼 HR Preparation",
+"answer":"Prepare Self Introduction, Projects, Strengths, Weaknesses and Career Goals."
+},
+
+{
+"question":"🌐 Official Career Websites",
+"answer":"Visit the official career pages of TCS, Infosys, Wipro, Accenture, Google and Amazon for current job openings."
+}
+
+]
+    }
+
+    resources = {
+
+    "python":[
+        {"name":"GeeksforGeeks","desc":"Python Interview Questions","url":"https://www.geeksforgeeks.org/python-programming-language/"},
+        {"name":"W3Schools","desc":"Learn Python","url":"https://www.w3schools.com/python/"},
+        {"name":"Real Python","desc":"Python Tutorials","url":"https://realpython.com/"},
+        {"name":"Python Docs","desc":"Official Documentation","url":"https://docs.python.org/3/"}
+    ],
+
+    "machine-learning":[
+        {"name":"Kaggle","desc":"ML Datasets & Practice","url":"https://www.kaggle.com/"},
+        {"name":"Scikit-Learn","desc":"ML Documentation","url":"https://scikit-learn.org/"},
+        {"name":"Google ML Crash Course","desc":"Learn ML","url":"https://developers.google.com/machine-learning/crash-course"},
+        {"name":"Papers With Code","desc":"Research Papers","url":"https://paperswithcode.com/"}
+    ],
+
+    "general-knowledge":[
+        {"name":"GKToday","desc":"Current Affairs & GK","url":"https://www.gktoday.in/"},
+        {"name":"Jagran Josh","desc":"GK & Exams","url":"https://www.jagranjosh.com/"},
+        {"name":"AffairsCloud","desc":"Daily Current Affairs","url":"https://affairscloud.com/"},
+        {"name":"Testbook GK","desc":"GK Practice","url":"https://testbook.com/"}
+    ],
+
+    "company-wise":[
+        {"name":"LinkedIn Jobs","desc":"Latest Jobs","url":"https://www.linkedin.com/jobs/"},
+        {"name":"Glassdoor","desc":"Interview Experience","url":"https://www.glassdoor.com/"},
+        {"name":"AmbitionBox","desc":"Company Reviews","url":"https://www.ambitionbox.com/"},
+        {"name":"Naukri","desc":"Company Openings","url":"https://www.naukri.com/"}
+    ],
+
+    "aptitude":[
+        {"name":"IndiaBix","desc":"Aptitude Practice","url":"https://www.indiabix.com/"},
+        {"name":"PrepInsta","desc":"Placement Preparation","url":"https://prepinsta.com/"},
+        {"name":"Testbook","desc":"Aptitude Questions","url":"https://testbook.com/"},
+        {"name":"FreshersNow","desc":"Placement Preparation","url":"https://www.freshersnow.com/"}
+    ],
+
+    "reasoning":[
+        {"name":"IndiaBix","desc":"Reasoning Practice","url":"https://www.indiabix.com/logical-reasoning/"},
+        {"name":"PrepInsta","desc":"Reasoning Questions","url":"https://prepinsta.com/"},
+        {"name":"Testbook","desc":"Logical Reasoning","url":"https://testbook.com/"},
+        {"name":"FreshersNow","desc":"Reasoning","url":"https://www.freshersnow.com/"}
+    ],
+
+    "hr-interview":[
+        {"name":"Glassdoor","desc":"HR Questions","url":"https://www.glassdoor.com/Interview/"},
+        {"name":"Indeed","desc":"Interview Guide","url":"https://www.indeed.com/career-advice"},
+        {"name":"AmbitionBox","desc":"Interview Experience","url":"https://www.ambitionbox.com/interviews"},
+        {"name":"LinkedIn","desc":"Career Advice","url":"https://www.linkedin.com/"}
+    ]
+}
+
+    questions = interview_data.get(topic, [])
+
+
+    return render_template(
+    "interview_topic.html",
+    title=topic.replace("-", " ").title(),
+    questions=questions,
+    resources=(
+        resources["aptitude"] if topic in ["number-system", "percentage"] else
+        resources["reasoning"] if topic in ["blood-relations"] else
+        resources["python"] if topic in ["python", "sql", "dbms", "operating-system", "computer-networks"] else
+        resources["machine-learning"] if topic in ["machine-learning", "deep-learning", "tensorflow"] else
+        resources["general-knowledge"] if topic == "general-knowledge" else
+        resources["company-wise"] if topic == "company-wise" else
+        resources["hr-interview"] if topic == "hr-interview" else
+        []
+    )
+)
+
 # ---------------- RUN ----------------
 if __name__ == "__main__":
     app.run(debug=True)
