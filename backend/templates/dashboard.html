@@ -254,6 +254,341 @@
 
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 
+<!-- 🤖 AI CHATBOT -->
+
+<div id="chatbot-button" onclick="toggleChatbot()">
+    🤖
+</div>
+
+<div id="chatbot-window">
+
+    <div id="chatbot-header">
+        <span>🤖 AI Career Assistant</span>
+        <button onclick="toggleChatbot()">×</button>
+    </div>
+
+    <div id="chatbot-messages">
+        <div class="bot-message">
+            👋 Hi! I'm your AI Career Assistant.<br>
+            Ask me anything about your career, resume, interviews, skills or this project.
+        </div>
+    </div>
+
+    <div id="chatbot-input-area">
+
+        <input
+            type="text"
+            id="chatbot-input"
+            placeholder="Ask me anything..."
+            onkeypress="handleChatKey(event)"
+        >
+
+        <button onclick="sendMessage()">
+            ➤
+        </button>
+
+    </div>
+
+</div>
+<style>
+
+#chatbot-button {
+    position: fixed;
+    right: 25px;
+    bottom: 25px;
+
+    width: 60px;
+    height: 60px;
+
+    background: #2563eb;
+    color: white;
+
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 30px;
+
+    cursor: pointer;
+
+    box-shadow: 0 5px 20px rgba(0,0,0,0.25);
+
+    z-index: 9999;
+
+    transition: 0.3s;
+}
+
+#chatbot-button:hover {
+    transform: scale(1.1);
+}
+
+
+#chatbot-window {
+
+    display: none;
+
+    position: fixed;
+
+    right: 25px;
+    bottom: 95px;
+
+    width: 350px;
+    height: 480px;
+
+    background: white;
+
+    border-radius: 15px;
+
+    box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+
+    overflow: hidden;
+
+    z-index: 9999;
+
+    border: 1px solid #ddd;
+}
+
+
+#chatbot-header {
+
+    height: 60px;
+
+    background: #2563eb;
+
+    color: white;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    padding: 0 15px;
+
+    font-weight: bold;
+}
+
+
+#chatbot-header button {
+
+    background: transparent;
+
+    border: none;
+
+    color: white;
+
+    font-size: 25px;
+
+    cursor: pointer;
+}
+
+
+#chatbot-messages {
+
+    height: 360px;
+
+    padding: 15px;
+
+    overflow-y: auto;
+
+    background: #f8fafc;
+}
+
+
+.bot-message {
+
+    background: #e5e7eb;
+
+    padding: 10px;
+
+    border-radius: 10px;
+
+    margin-bottom: 10px;
+
+    max-width: 85%;
+
+    font-size: 14px;
+}
+
+
+.user-message {
+
+    background: #2563eb;
+
+    color: white;
+
+    padding: 10px;
+
+    border-radius: 10px;
+
+    margin-bottom: 10px;
+
+    margin-left: auto;
+
+    max-width: 85%;
+
+    font-size: 14px;
+}
+
+
+#chatbot-input-area {
+
+    display: flex;
+
+    padding: 10px;
+
+    border-top: 1px solid #ddd;
+
+    background: white;
+}
+
+
+#chatbot-input {
+
+    flex: 1;
+
+    border: 1px solid #ddd;
+
+    border-radius: 20px;
+
+    padding: 10px;
+
+    outline: none;
+}
+
+
+#chatbot-input-area button {
+
+    margin-left: 8px;
+
+    width: 42px;
+
+    border: none;
+
+    border-radius: 50%;
+
+    background: #2563eb;
+
+    color: white;
+
+    cursor: pointer;
+
+    font-size: 18px;
+}
+
+</style>
+
+<script>
+
+function toggleChatbot() {
+
+    const chatbot = document.getElementById("chatbot-window");
+
+    if (chatbot.style.display === "none" || chatbot.style.display === "") {
+
+        chatbot.style.display = "block";
+
+    } else {
+
+        chatbot.style.display = "none";
+
+    }
+}
+
+
+function handleChatKey(event) {
+
+    if (event.key === "Enter") {
+
+        sendMessage();
+
+    }
+
+}
+
+
+async function sendMessage() {
+
+    const input = document.getElementById("chatbot-input");
+
+    const message = input.value.trim();
+
+    if (!message) {
+        return;
+    }
+
+    const messages = document.getElementById("chatbot-messages");
+
+    // User message
+
+    messages.innerHTML += `
+        <div class="user-message">
+            ${message}
+        </div>
+    `;
+
+    input.value = "";
+
+    messages.scrollTop = messages.scrollHeight;
+
+
+    // Temporary thinking message
+
+    const thinking = document.createElement("div");
+
+    thinking.className = "bot-message";
+
+    thinking.innerHTML = "🤔 Thinking...";
+
+    messages.appendChild(thinking);
+
+
+    try {
+
+        const response = await fetch("/chatbot", {
+
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                message: message
+            })
+
+        });
+
+
+        const data = await response.json();
+
+        thinking.remove();
+
+
+        messages.innerHTML += `
+            <div class="bot-message">
+                ${data.reply.replace(/\n/g, "<br>")}
+            </div>
+        `;
+
+    }
+
+    catch (error) {
+
+        thinking.innerHTML =
+            "❌ Sorry, something went wrong. Please try again.";
+
+    }
+
+
+    messages.scrollTop = messages.scrollHeight;
+
+}
+
+</script>
+
 </body>
 
 </html>

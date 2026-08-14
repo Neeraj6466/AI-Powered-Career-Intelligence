@@ -137,13 +137,11 @@ body{
 }
 
 .card{
-    background: rgba(255,255,255,0.15);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    border:1px solid rgba(255,255,255,0.2);
+    background:#ffffff;
+    border:1px solid #e5e7eb;
     border-radius:20px;
     padding:25px;
-    box-shadow:0 10px 30px rgba(0,0,0,.15);
+    box-shadow:0 8px 25px rgba(0,0,0,0.10);
     transition:.3s;
 }
 
@@ -153,10 +151,9 @@ body{
 }
 
 .card h3{
-    color:#6b7280;
+    color:#1f2937;
     margin-bottom:15px;
 }
-
 .card h1{
     color:#2563eb;
     font-size:34px;
@@ -174,13 +171,11 @@ body{
 }
 
 .chart-card{
-    background: rgba(255,255,255,0.15);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    border:1px solid rgba(255,255,255,0.2);
+    background:#ffffff;
+    border:1px solid #e5e7eb;
     border-radius:20px;
     padding:25px;
-    box-shadow:0 10px 30px rgba(0,0,0,.15);
+    box-shadow:0 8px 25px rgba(0,0,0,0.10);
     transition:0.3s;
 }
 
@@ -200,13 +195,11 @@ canvas{
 }
 
 .upload-card{
-    background: rgba(255,255,255,0.15);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
-    border:1px solid rgba(255,255,255,0.2);
+    background:#ffffff;
+    border:1px solid #e5e7eb;
     border-radius:20px;
     padding:30px;
-    box-shadow:0 10px 30px rgba(0,0,0,.15);
+    box-shadow:0 8px 25px rgba(0,0,0,0.10);
     transition:0.3s;
 }
 
@@ -216,7 +209,7 @@ canvas{
 }
 
 .upload-card p{
-    color:#6b7280;
+    color:#4b5563;
     margin-bottom:20px;
 }
 

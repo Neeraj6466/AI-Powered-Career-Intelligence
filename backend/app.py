@@ -12,7 +12,7 @@ from career_recommender import recommend_career
 from missing_skills import get_missing_skills
 from course_recommender import recommend_courses
 from salary_predictor import predict_salary
-from gemini_ai import analyze_resume
+from gemini_ai import analyze_resume, career_chatbot
 from pdf_generator import generate_report
 from ats_score import calculate_ats_score 
 from keyword_matcher import keyword_match 
@@ -1462,6 +1462,79 @@ def interview_topic(topic):
         []
     )
 )
+
+# ---------------- AI CHATBOT ----------------
+
+@app.route("/chatbot", methods=["POST"])
+@login_required
+def chatbot():
+
+    data = request.get_json()
+
+    user_message = data.get("message", "").strip()
+
+    if not user_message:
+        return {"reply": "Please enter a question."}
+
+    # Previous conversation
+    chat_history = session.get("chat_history", [])
+
+    conversation = ""
+
+    for chat in chat_history:
+        conversation += f"User: {chat['user']}\n"
+        conversation += f"AI: {chat['ai']}\n"
+
+    # User's project data
+    user_context = {
+        "ATS Score": session.get("ats_score", "Not available"),
+        "Job Match": session.get("job_match", "Not available"),
+        "Matching Skills": session.get("matching_skills", []),
+        "Missing Skills": session.get("missing_skills", []),
+        "Recommended Career": session.get("career", "Not available"),
+        "Predicted Salary": session.get("salary", "Not available"),
+        "Recommended Courses": session.get("courses", [])
+    }
+
+    # Send everything to Gemini
+    full_message = f"""
+User's Career Platform Data:
+
+{user_context}
+
+Previous conversation:
+
+{conversation}
+
+Current user question:
+
+{user_message}
+
+Use the user's Career Platform Data when answering questions
+about their resume, ATS score, job match, skills, career, salary,
+or recommended courses.
+
+Do not invent personal scores, skills, salary, or career information.
+
+If the required information is not available, tell the user to
+complete the relevant analysis first.
+
+Answer in the same language used by the user.
+Keep the explanation simple and practical.
+"""
+
+    reply = career_chatbot(full_message)
+
+    # Save conversation
+    chat_history.append({
+        "user": user_message,
+        "ai": reply
+    })
+
+    # Keep latest 10 conversations
+    session["chat_history"] = chat_history[-10:]
+
+    return {"reply": reply}
 
 # ---------------- RUN ----------------
 if __name__ == "__main__":
