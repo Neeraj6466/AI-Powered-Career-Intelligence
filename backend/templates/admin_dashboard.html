@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Admin Dashboard - AI Career Intelligence</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f5f6fa;
+            color: #222;
+        }
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 240px;
+            background: #111827;
+            color: white;
+            padding: 25px 15px;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 35px;
+            padding-left: 10px;
+        }
+
+        .menu-title {
+            font-size: 12px;
+            color: #9ca3af;
+            margin: 20px 10px 8px;
+            text-transform: uppercase;
+        }
+
+        .menu a {
+            display: block;
+            padding: 12px 15px;
+            margin: 5px 0;
+            border-radius: 8px;
+            color: #d1d5db;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .menu a:hover,
+        .menu a.active {
+            background: #4f46e5;
+            color: white;
+        }
+
+        /* MAIN */
+        .main {
+            flex: 1;
+            padding: 30px;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .topbar h1 {
+            font-size: 28px;
+            color: #111827;
+        }
+
+        .admin-badge {
+            background: #4f46e5;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 20px;
+            font-size: 13px;
+        }
+
+        /* CARDS */
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+        }
+
+        .card {
+            background: white;
+            padding: 22px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+        }
+
+        .card h3 {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 12px;
+        }
+
+        .card .number {
+            font-size: 30px;
+            font-weight: bold;
+            color: #111827;
+        }
+
+        /* QUICK ACTIONS */
+        .section {
+            margin-top: 25px;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+        }
+
+        .section h2 {
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+
+        .actions {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .action {
+            padding: 18px;
+            background: #f3f4f6;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .action:hover {
+            background: #e5e7eb;
+        }
+
+        .action strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .action span {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 1000px) {
+
+            .cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .actions {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 700px) {
+
+            .sidebar {
+                width: 190px;
+            }
+
+            .cards {
+                grid-template-columns: 1fr;
+            }
+
+            .actions {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+        <div class="logo">
+            🤖 CareerAI
+        </div>
+
+        <div class="menu-title">
+            Operations & Analytics
+        </div>
+
+        <div class="menu">
+
+            <a href="#" class="active">
+                📊 Overview
+            </a>
+
+            <a href="{{ url_for('admin_jobs') }}">
+    💼 Job Postings
+</a>
+
+
+            <a href="{{ url_for('admin_announcements') }}">
+    📢 Announcements
+</a>
+
+        </div>
+
+        <div class="menu-title">
+            Users & Support
+        </div>
+
+        <div class="menu">
+
+            <a href="{{ url_for('admin_users') }}">
+    👥 User Directory
+</a>
+
+            <a href="{{ url_for('admin_resumes') }}">
+    📄 Resumes & Parsing
+</a>
+
+            <a href="{{ url_for('admin_courses') }}">
+    📚 Courses
+</a>
+
+            <a href="{{ url_for('admin_feedback') }}">
+                💬 Feedback & Bugs
+            </a>
+
+        </div>
+
+        <div class="menu-title">
+            System & Data
+        </div>
+
+        <div class="menu">
+
+            <a href="{{ url_for('admin_skill_analytics') }}">
+    📈 Skill & ATS Analytics
+</a>
+
+            <a href="{{ url_for('admin_activity_logs') }}">
+    📋 Activity Logs
+</a>
+
+            <a href="{{ url_for('admin_system_api') }}">
+    ⚙️ System & API
+</a>
+
+        </div>
+
+    </aside>
+
+
+    <!-- MAIN CONTENT -->
+    <main class="main">
+
+        <div class="topbar">
+
+            <div>
+                <h1>Admin Intelligence Control Center</h1>
+
+                <p style="color:#6b7280; margin-top:6px;">
+                    Full system overview, analytics and user operations
+                </p>
+            </div>
+
+            <div class="admin-badge">
+                👤 Admin
+            </div>
+
+        </div>
+
+
+        <!-- STATISTICS -->
+        <div class="cards">
+
+            <div class="card">
+                <h3>👥 Total Registered Users</h3>
+
+                <div class="number">
+    {{ total_users }}
+</div>
+            </div>
+
+
+            <div class="card">
+                <h3>📄 Resumes Uploaded</h3>
+
+                <div class="number">
+    {{ total_resumes }}
+</div>
+            </div>
+
+
+            <div class="card">
+                <h3>📊 Average ATS Score</h3>
+
+                <div class="number">
+                    {{ avg_score }}%
+                </div>
+            </div>
+
+
+            <div class="card">
+                <h3>💼 Job Postings</h3>
+
+                <div class="number">
+                    {{ total_jobs }}
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3>📚 Courses</h3>
+
+                <div class="number">
+                {{ total_courses }}
+                </div>
+
+            </div>
+
+            <div class="card">
+                <h3>📚 Total Courses</h3>
+
+                <div class="number">
+                    {{ total_courses }} 
+                </div>
+            </div>
+
+        </div>
+
+
+        <!-- QUICK ACTIONS -->
+        <div class="section">
+
+            <h2>
+                ⚡ Admin Operations Quick Actions
+            </h2>
+
+            <div class="actions">
+
+                <a href="{{ url_for('admin_users') }}"
+   style="text-decoration:none; color:inherit;">
+
+    <div class="action">
+
+        <strong>👥 Manage Users</strong>
+
+        <span>
+            View and manage registered users
+        </span>
+
+    </div>
+
+</a>
+
+                <a href="{{ url_for('admin_jobs') }}" style="text-decoration:none; color:inherit;">
+    <div class="action">
+        <strong>💼 Manage Jobs</strong>
+        <span>Add and manage job postings</span>
+    </div>
+</a>
+
+                <a href="{{ url_for('admin_courses') }}"
+   style="text-decoration:none; color:inherit;">
+
+    <div class="action">
+        <strong>📚 Manage Courses</strong>
+        <span>Add learning resources</span>
+    </div>
+
+</a>
+
+                <a href="{{ url_for('admin_announcements') }}"
+   style="text-decoration:none; color:inherit;">
+
+    <div class="action">
+        <strong>📢 Announcement</strong>
+        <span>Broadcast an announcement</span>
+    </div>
+
+</a>
+
+            </div>
+
+        </div>
+
+
+        <!-- SYSTEM OVERVIEW -->
+        <div class="section">
+
+            <h2>
+                📈 System Overview
+            </h2>
+
+            <p style="color:#6b7280;">
+                Admin analytics and platform statistics will appear here.
+            </p>
+
+        </div>
+
+    </main>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Skill & ATS Analytics - Admin</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f5f6fa;
+            color: #111827;
+        }
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 240px;
+            background: #111827;
+            color: white;
+            padding: 25px 15px;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 35px;
+            padding-left: 10px;
+        }
+
+        .menu-title {
+            font-size: 11px;
+            color: #9ca3af;
+            margin: 20px 10px 8px;
+            text-transform: uppercase;
+        }
+
+        .menu a {
+            display: block;
+            padding: 12px 15px;
+            margin: 5px 0;
+            border-radius: 8px;
+            color: #d1d5db;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .menu a:hover,
+        .menu a.active {
+            background: #4f46e5;
+            color: white;
+        }
+
+        .main {
+            flex: 1;
+            padding: 30px;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .topbar h1 {
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            margin-top: 6px;
+        }
+
+        .back {
+            background: #4f46e5;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 8px;
+            text-decoration: none;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+        }
+
+        .card {
+            background: white;
+            padding: 22px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+        }
+
+        .card h3 {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 12px;
+        }
+
+        .number {
+            font-size: 30px;
+            font-weight: bold;
+        }
+
+        .section {
+            background: white;
+            padding: 25px;
+            margin-top: 25px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+        }
+
+        .section h2 {
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+
+        .charts {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .chart-box {
+            background: #fafafa;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .skill-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 14px 0;
+        }
+
+        .skill-name {
+            width: 130px;
+            font-weight: bold;
+        }
+
+        .skill-bar {
+            flex: 1;
+            height: 12px;
+            background: #e5e7eb;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .skill-fill {
+            height: 100%;
+            background: #4f46e5;
+        }
+
+        .skill-count {
+            width: 30px;
+            font-weight: bold;
+        }
+
+        .empty {
+            text-align: center;
+            color: #6b7280;
+            padding: 30px;
+        }
+
+        @media (max-width: 900px) {
+
+            .sidebar {
+                width: 200px;
+            }
+
+            .cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .charts {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+        @media (max-width: 600px) {
+
+            .layout {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+            }
+
+            .cards {
+                grid-template-columns: 1fr;
+            }
+
+            .main {
+                padding: 15px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="layout">
+
+
+    <!-- SIDEBAR -->
+
+    <aside class="sidebar">
+
+        <div class="logo">
+            🤖 CareerAI
+        </div>
+
+
+        <div class="menu-title">
+            Operations & Analytics
+        </div>
+
+        <div class="menu">
+
+            <a href="{{ url_for('admin_dashboard') }}">
+                📊 Overview
+            </a>
+
+            <a href="{{ url_for('admin_jobs') }}">
+                💼 Job Postings
+            </a>
+
+            <a href="{{ url_for('admin_courses') }}">
+                📚 Courses
+            </a>
+
+            <a href="{{ url_for('admin_announcements') }}">
+                📢 Announcements
+            </a>
+
+        </div>
+
+
+        <div class="menu-title">
+            Users & Support
+        </div>
+
+        <div class="menu">
+
+            <a href="{{ url_for('admin_users') }}">
+                👥 User Directory
+            </a>
+
+            <a href="{{ url_for('admin_resumes') }}">
+                📄 Resumes & Parsing
+            </a>
+
+            <a href="{{ url_for('admin_feedback') }}">
+                💬 Feedback & Bugs
+            </a>
+
+        </div>
+
+
+        <div class="menu-title">
+            System & Data
+        </div>
+
+        <div class="menu">
+
+            <a href="{{ url_for('admin_skill_analytics') }}"
+               class="active">
+
+                📈 Skill & ATS Analytics
+
+            </a>
+
+            <a href="{{ url_for('admin_activity_logs') }}">
+                📝 Activity Logs
+            </a>
+
+            <a href="#">
+    ⚙️ System & API
+</a>
+
+        </div>
+
+    </aside>
+
+
+    <!-- MAIN -->
+
+    <main class="main">
+
+
+        <div class="topbar">
+
+            <div>
+
+                <h1>
+                    📈 Skill & ATS Analytics
+                </h1>
+
+                <p class="subtitle">
+                    Resume skills, ATS performance and career insights
+                </p>
+
+            </div>
+
+            <a href="{{ url_for('admin_dashboard') }}"
+               class="back">
+
+                ← Admin Dashboard
+
+            </a>
+
+        </div>
+
+
+        <!-- STATISTICS -->
+
+        <div class="cards">
+
+            <div class="card">
+
+                <h3>
+                    📄 Analysed Resumes
+                </h3>
+
+                <div class="number">
+                    {{ total_resumes }}
+                </div>
+
+            </div>
+
+
+            <div class="card">
+
+                <h3>
+                    🎯 Average ATS Score
+                </h3>
+
+                <div class="number">
+                    {{ avg_ats }}%
+                </div>
+
+            </div>
+
+
+            <div class="card">
+
+                <h3>
+                    📊 Average Resume Score
+                </h3>
+
+                <div class="number">
+                    {{ avg_resume }}%
+                </div>
+
+            </div>
+
+
+            <div class="card">
+
+                <h3>
+                    🧠 Skills Detected
+                </h3>
+
+                <div class="number">
+                    {{ total_skills }}
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- CHARTS -->
+
+        <div class="section">
+
+            <h2>
+                📊 Score Analysis
+            </h2>
+
+            <div class="charts">
+
+                <div class="chart-box">
+
+                    <canvas id="atsChart"></canvas>
+
+                </div>
+
+
+                <div class="chart-box">
+
+                    <canvas id="resumeChart"></canvas>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- SKILLS -->
+
+        <div class="section">
+
+            <h2>
+                🧠 Top Skills
+            </h2>
+
+            {% if top_skills %}
+
+                {% for skill, count in top_skills %}
+
+                <div class="skill-row">
+
+                    <div class="skill-name">
+                        {{ skill }}
+                    </div>
+
+                    <div class="skill-bar">
+
+                        <div
+                            class="skill-fill"
+                            style="width: {{ (count / max_skill_count * 100) if max_skill_count else 0 }}%;">
+                        </div>
+
+                    </div>
+
+                    <div class="skill-count">
+                        {{ count }}
+                    </div>
+
+                </div>
+
+                {% endfor %}
+
+            {% else %}
+
+                <div class="empty">
+                    No skill data available yet.
+                </div>
+
+            {% endif %}
+
+        </div>
+
+
+        <!-- CAREER DISTRIBUTION -->
+
+        <div class="section">
+
+            <h2>
+                🎯 Career Distribution
+            </h2>
+
+            <div class="chart-box">
+
+                <canvas id="careerChart"></canvas>
+
+            </div>
+
+        </div>
+
+
+    </main>
+
+</div>
+
+
+<script>
+
+    const atsLabels = {{ ats_labels | tojson }};
+    const atsValues = {{ ats_values | tojson }};
+
+    const resumeLabels = {{ resume_labels | tojson }};
+    const resumeValues = {{ resume_values | tojson }};
+
+    const careerLabels = {{ career_labels | tojson }};
+    const careerValues = {{ career_values | tojson }};
+
+
+    new Chart(
+        document.getElementById("atsChart"),
+        {
+            type: "bar",
+
+            data: {
+                labels: atsLabels,
+
+                datasets: [{
+                    label: "ATS Score",
+
+                    data: atsValues
+                }]
+            },
+
+            options: {
+                responsive: true,
+
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                }
+            }
+        }
+    );
+
+
+    new Chart(
+        document.getElementById("resumeChart"),
+        {
+            type: "bar",
+
+            data: {
+                labels: resumeLabels,
+
+                datasets: [{
+                    label: "Resume Score",
+
+                    data: resumeValues
+                }]
+            },
+
+            options: {
+                responsive: true,
+
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                }
+            }
+        }
+    );
+
+
+    new Chart(
+        document.getElementById("careerChart"),
+        {
+            type: "doughnut",
+
+            data: {
+                labels: careerLabels,
+
+                datasets: [{
+                    label: "Careers",
+
+                    data: careerValues
+                }]
+            },
+
+            options: {
+                responsive: true
+            }
+        }
+    );
+
+</script>
+
+
+</body>
+
+</html>

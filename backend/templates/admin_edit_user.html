@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Edit User | Admin</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f4f6f9;
+            color: #222;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1100px;
+            margin: 40px auto;
+        }
+
+        .header {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .header h1 {
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #666;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+
+        .card h2 {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-weight: bold;
+            margin-bottom: 7px;
+        }
+
+        input,
+        textarea,
+        select {
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 7px;
+            font-size: 15px;
+            outline: none;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            border-color: #4f46e5;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        button,
+        .cancel-btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 7px;
+            cursor: pointer;
+            font-size: 15px;
+            text-decoration: none;
+        }
+
+        .save-btn {
+            background: #4f46e5;
+            color: white;
+        }
+
+        .save-btn:hover {
+            background: #3730a3;
+        }
+
+        .cancel-btn {
+            background: #e5e7eb;
+            color: #222;
+        }
+
+        .cancel-btn:hover {
+            background: #d1d5db;
+        }
+
+        @media (max-width: 700px) {
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .full-width {
+                grid-column: auto;
+            }
+
+            .container {
+                width: 95%;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- HEADER -->
+
+    <div class="header">
+
+        <h1>✏️ Edit User</h1>
+
+        <p>
+            Update the user's profile information from the admin panel.
+        </p>
+
+    </div>
+
+
+    <!-- FORM -->
+
+    <form method="POST">
+
+        <!-- BASIC INFORMATION -->
+
+        <div class="card">
+
+            <h2>👤 Basic Information</h2>
+
+            <div class="form-grid">
+
+                <div class="form-group">
+
+                    <label>Full Name</label>
+
+                    <input
+                        type="text"
+                        name="fullname"
+                        value="{{ user[1] or '' }}"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>Email</label>
+
+                    <input
+                        type="email"
+                        name="email"
+                        value="{{ user[2] or '' }}"
+                        required
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>Phone</label>
+
+                    <input
+                        type="text"
+                        name="phone"
+                        value="{{ user[3] or '' }}"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>Date of Birth</label>
+
+                    <input
+                        type="date"
+                        name="dob"
+                        value="{{ user[4] or '' }}"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>Gender</label>
+
+                    <select name="gender">
+
+                        <option value="">Select Gender</option>
+
+                        <option value="Male"
+                            {% if user[5] == 'Male' %}selected{% endif %}>
+                            Male
+                        </option>
+
+                        <option value="Female"
+                            {% if user[5] == 'Female' %}selected{% endif %}>
+                            Female
+                        </option>
+
+                        <option value="Other"
+                            {% if user[5] == 'Other' %}selected{% endif %}>
+                            Other
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>Career Interest</label>
+
+                    <input
+                        type="text"
+                        name="career_interest"
+                        value="{{ user[20] or '' }}"
+                    >
+
+                </div>
+
+
+                <div class="form-group full-width">
+
+                    <label>Address</label>
+
+                    <textarea name="address">{{ user[6] or '' }}</textarea>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>City</label>
+
+                    <input
+                        type="text"
+                        name="city"
+                        value="{{ user[7] or '' }}"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>State</label>
+
+                    <input
+                        type="text"
+                        name="state"
+                        value="{{ user[8] or '' }}"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>Country</label>
+
+                    <input
+                        type="text"
+                        name="country"
+                        value="{{ user[9] or '' }}"
+                    >
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- TECHNICAL SKILLS -->
+
+        <div class="card">
+
+            <h2>💻 Technical Skills</h2>
+
+            <div class="form-grid">
+
+                <div class="form-group">
+
+                    <label>Programming Languages</label>
+
+                    <textarea name="programming_languages">{{ user[10] or '' }}</textarea>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>Web Technologies</label>
+
+                    <textarea name="web_technologies">{{ user[11] or '' }}</textarea>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>Frameworks</label>
+
+                    <textarea name="frameworks">{{ user[12] or '' }}</textarea>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>Databases</label>
+
+                    <textarea name="databases">{{ user[13] or '' }}</textarea>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- PROJECT INFORMATION -->
+
+        <div class="card">
+
+            <h2>🚀 Project Information</h2>
+
+            <div class="form-grid">
+
+                <div class="form-group">
+
+                    <label>Project Name</label>
+
+                    <input
+                        type="text"
+                        name="project_name"
+                        value="{{ user[14] or '' }}"
+                    >
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>GitHub Repository</label>
+
+                    <input
+                        type="text"
+                        name="github_repo"
+                        value="{{ user[16] or '' }}"
+                    >
+
+                </div>
+
+
+                <div class="form-group full-width">
+
+                    <label>Project Description</label>
+
+                    <textarea name="project_description">{{ user[15] or '' }}</textarea>
+
+                </div>
+
+
+                <div class="form-group full-width">
+
+                    <label>Technologies Used</label>
+
+                    <textarea name="tech_used">{{ user[17] or '' }}</textarea>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- EXPERIENCE -->
+
+        <div class="card">
+
+            <h2>📜 Experience & Certifications</h2>
+
+            <div class="form-grid">
+
+                <div class="form-group">
+
+                    <label>Certifications</label>
+
+                    <textarea name="certifications">{{ user[18] or '' }}</textarea>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label>Work Experience</label>
+
+                    <textarea name="work_experience">{{ user[19] or '' }}</textarea>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- BUTTONS -->
+
+        <div class="buttons">
+
+            <button
+                type="submit"
+                class="save-btn"
+            >
+                💾 Save Changes
+            </button>
+
+
+            <a
+                href="{{ url_for('admin_user_details', user_id=user[0]) }}"
+                class="cancel-btn"
+            >
+                Cancel
+            </a>
+
+        </div>
+
+    </form>
+
+</div>
+
+</body>
+
+</html>

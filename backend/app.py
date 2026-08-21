@@ -1,7 +1,11 @@
+import email
+
 from flask import Flask, render_template, request, redirect, url_for, send_file, session
 import sqlite3
 import os
 import bcrypt
+import sys
+import platform
 
 from functools import wraps
 from werkzeug.utils import secure_filename
@@ -37,6 +41,30 @@ UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
+# ---------------- ACTIVITY LOGGER ----------------
+def log_activity(user_email, action, details=""):
+
+    try:
+
+        connection = sqlite3.connect(DATABASE)
+        cursor = connection.cursor()
+
+        cursor.execute("""
+            INSERT INTO activity_logs
+            (user_email, action, details)
+            VALUES (?, ?, ?)
+        """, (
+            user_email,
+            action,
+            details
+        ))
+
+        connection.commit()
+        connection.close()
+
+    except Exception as e:
+
+        print("Activity log error:", e)
 
 # ---------------- DECORATOR FOR PROTECTED ROUTES ----------------
 def login_required(f):
@@ -86,7 +114,11 @@ def register():
         except sqlite3.IntegrityError:
             connection.close()
             return "Email already exists!"
-
+        log_activity(
+            email,
+            "User Registered",
+            "New user account created"
+        )
         connection.close()
         return redirect(url_for("login"))
 
@@ -103,24 +135,31 @@ def login():
         connection = sqlite3.connect(DATABASE)
         cursor = connection.cursor()
 
-        # Query user data purely by email to evaluate the password programmatically
         cursor.execute(
-            "SELECT fullname, password FROM users WHERE email=?",
+            "SELECT fullname, password, role FROM users WHERE email=?",
             (email,)
         )
+
         user = cursor.fetchone()
         connection.close()
 
-        # Check if the user exists and verify the hashed password matches
-        if user and bcrypt.checkpw(password.encode("utf-8"), user[1].encode("utf-8")):
+        if user and bcrypt.checkpw(
+            password.encode("utf-8"),
+            user[1].encode("utf-8")
+        ):
             session["user_email"] = email
             session["user_name"] = user[0]
+            session["user_role"] = user[2]
+    
+            if user[2] == "admin":
+                return redirect(url_for("admin_dashboard"))
+
             return redirect(url_for("dashboard"))
+
         else:
             return "Invalid Email or Password!"
 
     return render_template("login.html")
-
 
 # ---------------- DASHBOARD ----------------
 @app.route("/dashboard")
@@ -145,6 +184,1532 @@ def dashboard():
         matching_skills=matching_skills,
         jd_missing_skills=jd_missing_skills
     )
+
+# ---------------- USER ANNOUNCEMENTS ----------------
+@app.route("/announcements")
+@login_required
+def announcements():
+
+    connection = sqlite3.connect(DATABASE)
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        SELECT
+            id,
+            title,
+            message,
+            created_at
+        FROM announcements
+        ORDER BY id DESC
+    """)
+
+    announcements = cursor.fetchall()
+
+    connection.close()
+
+    return render_template(
+        "announcements.html",
+        announcements=announcements
+    )
+
+# ---------------- ADMIN DASHBOARD ----------------
+@app.route("/admin")
+@login_required
+def admin_dashboard():
+
+    # Only admin can access
+    if session.get("user_role") != "admin":
+        return "Access Denied! Admins only.", 403
+
+    connection = sqlite3.connect(DATABASE)
+    cursor = connection.cursor()
+
+    # Count normal registered users
+    cursor.execute(
+        "SELECT COUNT(*) FROM users WHERE role='user'"
+    )
+
+    total_users = cursor.fetchone()[0]
+    
+        # Count uploaded resumes
+    cursor.execute(
+        "SELECT COUNT(*) FROM resume_history"
+    )
+
+    total_resumes = cursor.fetchone()[0]
+        # Calculate average ATS score
+    cursor.execute(
+        "SELECT AVG(score) FROM resume_history WHERE score IS NOT NULL"
+    )
+
+    avg_score = cursor.fetchone()[0]
+
+    if avg_score is None:
+        avg_score = 0
+    else:
+        avg_score = round(avg_score, 1)
+
+        # Count job postings
+    cursor.execute(
+        "SELECT COUNT(*) FROM job_postings"
+    )
+
+    total_jobs = cursor.fetchone()[0]
+    
+        # Count courses
+    cursor.execute(
+        "SELECT COUNT(*) FROM courses"
+    )
+
+    total_courses = cursor.fetchone()[0]
+
+    connection.close()
+
+    return render_template(
+    "admin_dashboard.html",
+    total_users=total_users,
+    total_resumes=total_resumes,
+    avg_score=avg_score,
+    total_jobs=total_jobs,
+    total_courses=total_courses
+)
+
+# ---------------- ADMIN JOB MANAGEMENT ----------------
+@app.route("/admin/jobs", methods=["GET", "POST"])
+@login_required
+def admin_jobs():
+
+    # Only admin can access
+    if session.get("user_role") != "admin":
+        return "Access Denied! Admins only.", 403
+
+    connection = sqlite3.connect(DATABASE)
+    cursor = connection.cursor()
+
+    # ---------------- ADD NEW JOB ----------------
+    if request.method == "POST":
+
+        title = request.form["title"]
+        company = request.form["company"]
+        location = request.form.get("location", "")
+        skills = request.form.get("skills", "")
+        description = request.form.get("description", "")
+
+        # Insert job into database
+        cursor.execute("""
+            INSERT INTO job_postings
+            (title, company, location, description, skills)
+            VALUES (?, ?, ?, ?, ?)
+        """, (
+            title,
+            company,
+            location,
+            description,
+            skills
+        ))
+
+        connection.commit()
+
+        # ---------------- ACTIVITY LOG ----------------
+        log_activity(
+            session.get("user_email", "Admin"),
+            "Job Added",
+            f"Added job: {title} at {company}"
+        )
+
+    # ---------------- GET ALL JOBS ----------------
+    cursor.execute("""
+        SELECT
+            id,
+            title,
+            company,
+            location,
+            description,
+            skills
+        FROM job_postings
+        ORDER BY id DESC
+    """)
+
+    jobs = cursor.fetchall()
+
+    connection.close()
+
+    return render_template(
+        "admin_jobs.html",
+        jobs=jobs
+    )
+
+# ---------------- DELETE ADMIN JOB ----------------
+@app.route("/admin/jobs/delete/<int:job_id>", methods=["POST"])
+@login_required
+def delete_admin_job(job_id):
+
+    # Only admin can delete
+    if session.get("user_role") != "admin":
+        return "Access Denied! Admins only.", 403
+
+    connection = sqlite3.connect(DATABASE)
+    cursor = connection.cursor()
+
+    # Get job details before deleting
+    cursor.execute("""
+        SELECT title, company
+        FROM job_postings
+        WHERE id = ?
+    """, (job_id,))
+
+    job = cursor.fetchone()
+
+    if not job:
+        connection.close()
+        return "Job not found.", 404
+
+    title = job[0]
+    company = job[1]
+
+    # Delete job
+    cursor.execute("""
+        DELETE FROM job_postings
+        WHERE id = ?
+    """, (job_id,))
+
+    connection.commit()
+
+    # Activity log
+    log_activity(
+        session.get("user_email", "Admin"),
+        "Job Deleted",
+        f"Deleted job: {title} at {company}"
+    )
+
+    connection.close()
+
+    return redirect(url_for("admin_jobs"))
+
+# ---------------- EDIT ADMIN JOB ----------------
+@app.route("/admin/jobs/edit/<int:job_id>", methods=["GET", "POST"])
+@login_required
+def edit_admin_job(job_id):
+
+    # Only admin can edit
+    if session.get("user_role") != "admin":
+        return "Access Denied! Admins only.", 403
+
+    connection = sqlite3.connect(DATABASE)
+    cursor = connection.cursor()
+
+    # Get existing job
+    cursor.execute("""
+        SELECT
+            id,
+            title,
+            company,
+            location,
+            description,
+            skills
+        FROM job_postings
+        WHERE id = ?
+    """, (job_id,))
+
+    job = cursor.fetchone()
+
+    if not job:
+        connection.close()
+        return "Job not found.", 404
+
+    # ---------------- UPDATE JOB ----------------
+    if request.method == "POST":
+
+        title = request.form.get("title", "").strip()
+        company = request.form.get("company", "").strip()
+        location = request.form.get("location", "").strip()
+        skills = request.form.get("skills", "").strip()
+        description = request.form.get("description", "").strip()
+
+        if not title or not company:
+            connection.close()
+            return "Job title and company are required.", 400
+
+        cursor.execute("""
+            UPDATE job_postings
+            SET
+                title = ?,
+                company = ?,
+                location = ?,
+                description = ?,
+                skills = ?
+            WHERE id = ?
+        """, (
+            title,
+            company,
+            location,
+            description,
+            skills,
+            job_id
+        ))
+
+        connection.commit()
+
+        # Activity Log
+        log_activity(
+            session.get("user_email", "Admin"),
+            "Job Updated",
+            f"Updated job: {title} at {company}"
+        )
+
+        connection.close()
+
+        return redirect(url_for("admin_jobs"))
+
+    connection.close()
+
+    return render_template(
+        "admin_edit_job.html",
+        job=job
+    )
+
+# ---------------- ADMIN COURSE MANAGEMENT ----------------
+@app.route("/admin/courses", methods=["GET", "POST"])
+@login_required
+def admin_courses():
+
+    # Only admin can access
+    if session.get("user_role") != "admin":
+        return "Access Denied! Admins only.", 403
+
+    connection = sqlite3.connect(DATABASE)
+    cursor = connection.cursor()
+
+    # ---------------- ADD NEW COURSE ----------------
+    if request.method == "POST":
+
+        name = request.form.get("name", "").strip()
+        platform = request.form.get("platform", "").strip()
+        category = request.form.get("category", "").strip()
+        url = request.form.get("url", "").strip()
+        description = request.form.get("description", "").strip()
+
+        if not name:
+            connection.close()
+            return "Course name is required.", 400
+
+        # Insert course into database
+        cursor.execute("""
+            INSERT INTO courses
+            (name, platform, category, url, description)
+            VALUES (?, ?, ?, ?, ?)
+        """, (
+            name,
+            platform,
+            category,
+            url,
+            description
+        ))
+
+        connection.commit()
+
+        # ---------------- ACTIVITY LOG ----------------
+        log_activity(
+            session.get("user_email", "Admin"),
+            "Course Added",
+            f"Added course: {name}"
+        )
+
+    # ---------------- GET ALL COURSES ----------------
+    cursor.execute("""
+        SELECT
+            id,
+            name,
+            platform,
+            category,
+            url,
+            description
+        FROM courses
+        ORDER BY id DESC
+    """)
+
+    courses = cursor.fetchall()
+
+    connection.close()
+
+    return render_template(
+        "admin_courses.html",
+        courses=courses
+    )
+
+# ---------------- EDIT ADMIN COURSE ----------------
+@app.route("/admin/courses/edit/<int:course_id>", methods=["GET", "POST"])
+@login_required
+def edit_admin_course(course_id):
+
+    # Only admin can edit
+    if session.get("user_role") != "admin":
+        return "Access Denied! Admins only.", 403
+
+    connection = sqlite3.connect(DATABASE)
+    cursor = connection.cursor()
+
+    # Get existing course
+    cursor.execute("""
+        SELECT
+            id,
+            name,
+            platform,
+            category,
+            url,
+            description
+        FROM courses
+        WHERE id = ?
+    """, (course_id,))
+
+    course = cursor.fetchone()
+
+    if not course:
+        connection.close()
+        return "Course not found.", 404
+
+    # Update course
+    if request.method == "POST":
+
+        name = request.form.get("name", "").strip()
+        platform_name = request.form.get("platform", "").strip()
+        category = request.form.get("category", "").strip()
+        url = request.form.get("url", "").strip()
+        description = request.form.get("description", "").strip()
+
+        if not name:
+            connection.close()
+            return "Course name is required.", 400
+
+        cursor.execute("""
+            UPDATE courses
+            SET
+                name = ?,
+                platform = ?,
+                category = ?,
+                url = ?,
+                description = ?
+            WHERE id = ?
+        """, (
+            name,
+            platform_name,
+            category,
+            url,
+            description,
+            course_id
+        ))
+
+        connection.commit()
+
+        # Activity Log
+        log_activity(
+            session.get("user_email", "Admin"),
+            "Course Updated",
+            f"Updated course: {name}"
+        )
+
+        connection.close()
+
+        return redirect(url_for("admin_courses"))
+
+    connection.close()
+
+    return render_template(
+        "admin_edit_course.html",
+        course=course
+    )
+
+
+# ---------------- DELETE ADMIN COURSE ----------------
+@app.route("/admin/courses/delete/<int:course_id>", methods=["POST"])
+@login_required
+def delete_admin_course(course_id):
+
+    # Only admin can delete
+    if session.get("user_role") != "admin":
+        return "Access Denied! Admins only.", 403
+
+    connection = sqlite3.connect(DATABASE)
+    cursor = connection.cursor()
+
+    # Get course before deleting
+    cursor.execute("""
+        SELECT name
+        FROM courses
+        WHERE id = ?
+    """, (course_id,))
+
+    course = cursor.fetchone()
+
+    if not course:
+        connection.close()
+        return "Course not found.", 404
+
+    course_name = course[0]
+
+    # Delete course
+    cursor.execute("""
+        DELETE FROM courses
+        WHERE id = ?
+    """, (course_id,))
+
+    connection.commit()
+
+    # Activity Log
+    log_activity(
+        session.get("user_email", "Admin"),
+        "Course Deleted",
+        f"Deleted course: {course_name}"
+    )
+
+    connection.close()
+
+    return redirect(url_for("admin_courses"))
+
+# ---------------- ADMIN ANNOUNCEMENTS ----------------
+@app.route("/admin/announcements", methods=["GET", "POST"])
+@login_required
+def admin_announcements():
+
+    # Only admin can access
+    if session.get("user_role") != "admin":
+        return "Access Denied! Admins only.", 403
+
+    connection = sqlite3.connect(DATABASE)
+    cursor = connection.cursor()
+
+    # Publish new announcement
+    if request.method == "POST":
+
+        title = request.form.get("title", "").strip()
+        message = request.form.get("message", "").strip()
+
+        if not title or not message:
+            connection.close()
+            return "Title and message are required.", 400
+
+        cursor.execute("""
+            INSERT INTO announcements
+            (title, message)
+            VALUES (?, ?)
+        """, (
+            title,
+            message
+        ))
+
+        connection.commit()
+
+        # Activity Log
+        log_activity(
+            session.get("user_email", "Admin"),
+            "Announcement Created",
+            f"Created announcement: {title}"
+        )
+
+    # Get all announcements
+    cursor.execute("""
+        SELECT
+            id,
+            title,
+            message,
+            created_at
+        FROM announcements
+        ORDER BY id DESC
+    """)
+
+    announcements = cursor.fetchall()
+
+    connection.close()
+
+    return render_template(
+        "admin_announcements.html",
+        announcements=announcements
+    )
+
+# ---------------- EDIT ADMIN ANNOUNCEMENT ----------------
+@app.route("/admin/announcements/edit/<int:announcement_id>", methods=["GET", "POST"])
+@login_required
+def edit_admin_announcement(announcement_id):
+
+    if session.get("user_role") != "admin":
+        return "Access Denied! Admins only.", 403
+
+    connection = sqlite3.connect(DATABASE)
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        SELECT
+            id,
+            title,
+            message,
+            created_at
+        FROM announcements
+        WHERE id = ?
+    """, (announcement_id,))
+
+    announcement = cursor.fetchone()
+
+    if not announcement:
+        connection.close()
+        return "Announcement not found.", 404
+
+    if request.method == "POST":
+
+        title = request.form.get("title", "").strip()
+        message = request.form.get("message", "").strip()
+
+        if not title or not message:
+            connection.close()
+            return "Title and message are required.", 400
+
+        cursor.execute("""
+            UPDATE announcements
+            SET
+                title = ?,
+                message = ?
+            WHERE id = ?
+        """, (
+            title,
+            message,
+            announcement_id
+        ))
+
+        connection.commit()
+
+        log_activity(
+            session.get("user_email", "Admin"),
+            "Announcement Updated",
+            f"Updated announcement: {title}"
+        )
+
+        connection.close()
+
+        return redirect(url_for("admin_announcements"))
+
+    connection.close()
+
+    return render_template(
+        "admin_edit_announcement.html",
+        announcement=announcement
+    )
+
+
+# ---------------- DELETE ADMIN ANNOUNCEMENT ----------------
+@app.route("/admin/announcements/delete/<int:announcement_id>", methods=["POST"])
+@login_required
+def delete_admin_announcement(announcement_id):
+
+    if session.get("user_role") != "admin":
+        return "Access Denied! Admins only.", 403
+
+    connection = sqlite3.connect(DATABASE)
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        SELECT title
+        FROM announcements
+        WHERE id = ?
+    """, (announcement_id,))
+
+    announcement = cursor.fetchone()
+
+    if not announcement:
+        connection.close()
+        return "Announcement not found.", 404
+
+    title = announcement[0]
+
+    cursor.execute("""
+        DELETE FROM announcements
+        WHERE id = ?
+    """, (announcement_id,))
+
+    connection.commit()
+
+    log_activity(
+        session.get("user_email", "Admin"),
+        "Announcement Deleted",
+        f"Deleted announcement: {title}"
+    )
+
+    connection.close()
+
+    return redirect(url_for("admin_announcements"))
+
+# ---------------- ADMIN FEEDBACK & BUGS ----------------
+@app.route("/admin/feedback")
+@login_required
+def admin_feedback():
+
+    # Only admin can access
+    if session.get("user_role") != "admin":
+        return "Access Denied! Admins only.", 403
+
+    connection = sqlite3.connect(DATABASE)
+    cursor = connection.cursor()
+
+    # Get all feedback and bug reports
+    cursor.execute("""
+        SELECT
+            id,
+            user_email,
+            type,
+            message,
+            status,
+            created_at
+        FROM feedback
+        ORDER BY id DESC
+    """)
+
+    feedback_items = cursor.fetchall()
+
+    connection.close()
+
+    return render_template(
+        "admin_feedback.html",
+        feedback_items=feedback_items
+    )
+
+# ---------------- RESOLVE FEEDBACK ----------------
+@app.route("/admin/feedback/resolve/<int:feedback_id>")
+@login_required
+def resolve_feedback(feedback_id):
+
+    # Only admin can access
+    if session.get("user_role") != "admin":
+        return "Access Denied! Admins only.", 403
+
+    connection = sqlite3.connect(DATABASE)
+    cursor = connection.cursor()
+
+    # Get feedback details before updating
+    cursor.execute("""
+        SELECT user_email, type
+        FROM feedback
+        WHERE id = ?
+    """, (feedback_id,))
+
+    feedback_data = cursor.fetchone()
+
+    if not feedback_data:
+        connection.close()
+        return "Feedback not found.", 404
+
+    feedback_user = feedback_data[0]
+    feedback_type = feedback_data[1]
+
+    # Update feedback status
+    cursor.execute("""
+        UPDATE feedback
+        SET status = 'Resolved'
+        WHERE id = ?
+    """, (feedback_id,))
+
+    connection.commit()
+
+    # Activity Log
+    log_activity(
+        session.get("user_email", "Admin"),
+        "Feedback Resolved",
+        f"Resolved {feedback_type} submitted by {feedback_user}"
+    )
+
+    connection.close()
+
+    return redirect(url_for("admin_feedback"))
+
+# ---------------- ADMIN ACTIVITY LOGS ----------------
+@app.route("/admin/activity-logs")
+@login_required
+def admin_activity_logs():
+
+    # Only admin can access
+    if session.get("user_role") != "admin":
+        return "Access Denied! Admins only.", 403
+
+    connection = sqlite3.connect(DATABASE)
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        SELECT
+            id,
+            user_email,
+            action,
+            details,
+            created_at
+        FROM activity_logs
+        ORDER BY id DESC
+    """)
+
+    logs = cursor.fetchall()
+
+    connection.close()
+
+    return render_template(
+        "admin_activity_logs.html",
+        logs=logs
+    )
+
+# ---------------- ADMIN SYSTEM & API MONITORING ----------------
+@app.route("/admin/system-api")
+@login_required
+def admin_system_api():
+
+    # Only admin can access
+    if session.get("user_role") != "admin":
+        return "Access Denied! Admins only.", 403
+
+    # ---------------- DATABASE STATUS ----------------
+    database_status = "CONNECTED"
+    database_class = "online"
+
+    try:
+        connection = sqlite3.connect(DATABASE)
+        cursor = connection.cursor()
+
+        cursor.execute("SELECT 1")
+        cursor.fetchone()
+
+        connection.close()
+
+    except Exception:
+        database_status = "ERROR"
+        database_class = "offline"
+
+
+    # ---------------- UPLOAD STORAGE STATUS ----------------
+    if os.path.exists(UPLOAD_FOLDER):
+
+        upload_status = "AVAILABLE"
+        upload_class = "online"
+
+        try:
+            uploaded_files = len(os.listdir(UPLOAD_FOLDER))
+        except Exception:
+            uploaded_files = 0
+
+    else:
+
+        upload_status = "NOT AVAILABLE"
+        upload_class = "offline"
+        uploaded_files = 0
+
+
+    # ---------------- AI / GEMINI STATUS ----------------
+    # Do not display the actual API key.
+    if os.getenv("GEMINI_API_KEY"):
+
+        ai_status = "CONFIGURED"
+        ai_class = "online"
+
+        ai_badge_class = "badge-online"
+        ai_detail = "API KEY CONFIGURED"
+
+    else:
+
+        ai_status = "CHECK CONFIG"
+        ai_class = "warning"
+
+        ai_badge_class = "badge-warning"
+        ai_detail = "API KEY NOT DETECTED"
+
+
+    # ---------------- APPLICATION STATUS ----------------
+    application_status = "ONLINE"
+
+
+    # ---------------- SYSTEM INFORMATION ----------------
+    database_path = DATABASE
+    upload_path = UPLOAD_FOLDER
+
+    python_version = sys.version.split()[0]
+    system_platform = platform.system()
+
+
+    return render_template(
+        "admin_system_api.html",
+
+        application_status=application_status,
+
+        database_status=database_status,
+        database_class=database_class,
+
+        upload_status=upload_status,
+        upload_class=upload_class,
+
+        uploaded_files=uploaded_files,
+
+        ai_status=ai_status,
+        ai_class=ai_class,
+
+        database_path=database_path,
+        upload_path=upload_path,
+
+        platform=system_platform,
+        python_version=python_version,
+
+        ai_badge_class=ai_badge_class,
+        ai_detail=ai_detail
+    )
+
+# ---------------- USER FEEDBACK ----------------
+@app.route("/feedback", methods=["GET", "POST"])
+@login_required
+def feedback():
+
+    connection = sqlite3.connect(DATABASE)
+    cursor = connection.cursor()
+
+    if request.method == "POST":
+
+        feedback_type = request.form.get("type", "").strip()
+        message = request.form.get("message", "").strip()
+
+        if not feedback_type or not message:
+            connection.close()
+            return "Feedback type and message are required.", 400
+
+        # Get logged-in user's email
+        user_email = session.get("user_email", "")
+
+        cursor.execute("""
+            INSERT INTO feedback
+            (user_email, type, message)
+            VALUES (?, ?, ?)
+        """, (
+            user_email,
+            feedback_type,
+            message
+        ))
+
+        connection.commit()
+        
+        
+        log_activity(
+            user_email,
+            "Feedback Submitted",
+            f"Submitted {feedback_type}"
+        )
+        connection.close()
+
+        return redirect(url_for("feedback"))
+
+    connection.close()
+
+    return render_template("feedback.html")
+
+# ---------------- ADMIN USER DIRECTORY ----------------
+@app.route("/admin/users")
+@login_required
+def admin_users():
+
+    # Only admin can access
+    if session.get("user_role") != "admin":
+        return "Access Denied! Admins only.", 403
+
+    connection = sqlite3.connect(DATABASE)
+    cursor = connection.cursor()
+
+    # Get all normal registered users
+    cursor.execute("""
+        SELECT
+            id,
+            fullname,
+            email,
+            career_interest,
+            role
+        FROM users
+        WHERE role='user'
+        ORDER BY id DESC
+    """)
+
+    users = cursor.fetchall()
+
+    connection.close()
+
+    return render_template(
+        "admin_users.html",
+        users=users
+    )
+
+# ---------------- ADMIN USER DETAILS ----------------
+@app.route("/admin/users/<int:user_id>")
+@login_required
+def admin_user_details(user_id):
+
+    # Only admin can access
+    if session.get("user_role") != "admin":
+        return "Access Denied! Admins only.", 403
+
+    connection = sqlite3.connect(DATABASE)
+    cursor = connection.cursor()
+
+    # Get user details
+    cursor.execute("""
+        SELECT
+            id,
+            fullname,
+            email,
+            phone,
+            dob,
+            gender,
+            address,
+            city,
+            state,
+            country,
+            programming_languages,
+            web_technologies,
+            frameworks,
+            databases,
+            project_name,
+            project_description,
+            github_repo,
+            tech_used,
+            certifications,
+            work_experience,
+            career_interest
+        FROM users
+        WHERE id=?
+    """, (user_id,))
+
+    user = cursor.fetchone()
+
+    # Get education details
+    cursor.execute("""
+        SELECT
+            college,
+            degree,
+            branch,
+            university,
+            cgpa,
+            start_year,
+            end_year
+        FROM education
+        WHERE email=?
+    """, (user[2],) if user else ("",))
+
+    education = cursor.fetchall()
+
+    connection.close()
+
+    if not user:
+        return "User not found.", 404
+
+    return render_template(
+        "admin_user_details.html",
+        user=user,
+        education=education
+    )
+
+# ---------------- ADMIN EDIT USER ----------------
+@app.route("/admin/users/edit/<int:user_id>", methods=["GET", "POST"])
+@login_required
+def admin_edit_user(user_id):
+
+    # Only admin can access
+    if session.get("user_role") != "admin":
+        return "Access Denied! Admins only.", 403
+
+    connection = sqlite3.connect(DATABASE)
+    cursor = connection.cursor()
+
+    # Get existing user
+    cursor.execute("""
+        SELECT
+            id,
+            fullname,
+            email,
+            phone,
+            dob,
+            gender,
+            address,
+            city,
+            state,
+            country,
+            programming_languages,
+            web_technologies,
+            frameworks,
+            databases,
+            project_name,
+            project_description,
+            github_repo,
+            tech_used,
+            certifications,
+            work_experience,
+            career_interest
+        FROM users
+        WHERE id = ?
+    """, (user_id,))
+
+    user = cursor.fetchone()
+
+    if not user:
+        connection.close()
+        return "User not found.", 404
+
+    # ---------------- UPDATE USER ----------------
+    if request.method == "POST":
+
+        fullname = request.form.get("fullname", "").strip()
+        email = request.form.get("email", "").strip()
+        phone = request.form.get("phone", "").strip()
+        dob = request.form.get("dob", "").strip()
+        gender = request.form.get("gender", "").strip()
+        address = request.form.get("address", "").strip()
+        city = request.form.get("city", "").strip()
+        state = request.form.get("state", "").strip()
+        country = request.form.get("country", "").strip()
+
+        programming_languages = request.form.get(
+            "programming_languages", ""
+        ).strip()
+
+        web_technologies = request.form.get(
+            "web_technologies", ""
+        ).strip()
+
+        frameworks = request.form.get(
+            "frameworks", ""
+        ).strip()
+
+        databases = request.form.get(
+            "databases", ""
+        ).strip()
+
+        project_name = request.form.get(
+            "project_name", ""
+        ).strip()
+
+        project_description = request.form.get(
+            "project_description", ""
+        ).strip()
+
+        github_repo = request.form.get(
+            "github_repo", ""
+        ).strip()
+
+        tech_used = request.form.get(
+            "tech_used", ""
+        ).strip()
+
+        certifications = request.form.get(
+            "certifications", ""
+        ).strip()
+
+        work_experience = request.form.get(
+            "work_experience", ""
+        ).strip()
+
+        career_interest = request.form.get(
+            "career_interest", ""
+        ).strip()
+
+
+        if not fullname or not email:
+            connection.close()
+            return "Full name and email are required.", 400
+
+
+        # Check whether email already belongs to another user
+        cursor.execute("""
+            SELECT id
+            FROM users
+            WHERE email = ?
+            AND id != ?
+        """, (
+            email,
+            user_id
+        ))
+
+        existing_user = cursor.fetchone()
+
+        if existing_user:
+            connection.close()
+            return "Email already exists for another user.", 400
+
+
+        # Update user
+        cursor.execute("""
+            UPDATE users
+            SET
+                fullname = ?,
+                email = ?,
+                phone = ?,
+                dob = ?,
+                gender = ?,
+                address = ?,
+                city = ?,
+                state = ?,
+                country = ?,
+                programming_languages = ?,
+                web_technologies = ?,
+                frameworks = ?,
+                databases = ?,
+                project_name = ?,
+                project_description = ?,
+                github_repo = ?,
+                tech_used = ?,
+                certifications = ?,
+                work_experience = ?,
+                career_interest = ?
+            WHERE id = ?
+        """, (
+            fullname,
+            email,
+            phone,
+            dob,
+            gender,
+            address,
+            city,
+            state,
+            country,
+            programming_languages,
+            web_technologies,
+            frameworks,
+            databases,
+            project_name,
+            project_description,
+            github_repo,
+            tech_used,
+            certifications,
+            work_experience,
+            career_interest,
+            user_id
+        ))
+
+        connection.commit()
+
+
+        # Activity Log
+        log_activity(
+            session.get("user_email", "Admin"),
+            "User Updated",
+            f"Updated user: {email}"
+        )
+
+
+        connection.close()
+
+        return redirect(
+            url_for(
+                "admin_user_details",
+                user_id=user_id
+            )
+        )
+
+
+    connection.close()
+
+
+    return render_template(
+        "admin_edit_user.html",
+        user=user
+    )
+
+# ---------------- ADMIN RESUME MANAGEMENT ----------------
+@app.route("/admin/resumes")
+@login_required
+def admin_resumes():
+
+    # Only admin can access
+    if session.get("user_role") != "admin":
+        return "Access Denied! Admins only.", 403
+
+    connection = sqlite3.connect(DATABASE)
+    cursor = connection.cursor()
+
+    # Get all uploaded resumes
+    cursor.execute("""
+        SELECT
+            id,
+            email,
+            filename,
+            score,
+            upload_date
+        FROM resume_history
+        ORDER BY upload_date DESC
+    """)
+
+    resumes = cursor.fetchall()
+
+    connection.close()
+
+    return render_template(
+        "admin_resumes.html",
+        resumes=resumes
+    )
+
+# ---------------- ADMIN SKILL & ATS ANALYTICS ----------------
+@app.route("/admin/skill-analytics")
+@login_required
+def admin_skill_analytics():
+
+    # Only admin can access
+    if session.get("user_role") != "admin":
+        return "Access Denied! Admins only.", 403
+
+    connection = sqlite3.connect(DATABASE)
+    cursor = connection.cursor()
+
+    # Get all resume records
+    cursor.execute("""
+        SELECT email, filename, score, career
+        FROM resume_history
+        ORDER BY upload_date DESC
+    """)
+
+    resumes = cursor.fetchall()
+
+    connection.close()
+
+    # ---------------- BASIC STATISTICS ----------------
+
+    total_resumes = len(resumes)
+
+    resume_scores = []
+    ats_scores = []
+
+    all_skills = []
+    career_data = {}
+
+    # ---------------- ANALYZE RESUMES ----------------
+
+    for email, filename, score, career in resumes:
+
+        # Resume score
+        if score is not None:
+            resume_scores.append(float(score))
+
+        # Career distribution
+        if career:
+            career_data[career] = career_data.get(career, 0) + 1
+
+        # Find resume file
+        file_path = os.path.join(
+            app.config["UPLOAD_FOLDER"],
+            filename
+        )
+
+        # Analyze resume if file exists
+        if os.path.exists(file_path):
+
+            try:
+
+                # Extract resume text
+                resume_text = extract_text(file_path)
+
+                if resume_text.strip():
+
+                    # ATS score
+                    ats_score, ats_feedback = calculate_ats_score(
+                        resume_text
+                    )
+
+                    ats_scores.append(float(ats_score))
+
+                    # Extract skills
+                    skills = extract_skills(resume_text)
+
+                    if skills:
+                        all_skills.extend(skills)
+
+            except Exception as e:
+
+                print(
+                    f"Analytics error for {filename}: {e}"
+                )
+
+
+    # ---------------- AVERAGE SCORES ----------------
+
+    if ats_scores:
+        avg_ats = round(
+            sum(ats_scores) / len(ats_scores),
+            1
+        )
+    else:
+        avg_ats = 0
+
+
+    if resume_scores:
+        avg_resume = round(
+            sum(resume_scores) / len(resume_scores),
+            1
+        )
+    else:
+        avg_resume = 0
+
+
+    # ---------------- SKILL COUNTS ----------------
+
+    skill_counts = {}
+
+    for skill in all_skills:
+
+        skill_name = str(skill).strip()
+
+        if not skill_name:
+            continue
+
+        # Case-insensitive skill counting
+        normalized = skill_name.lower()
+
+        if normalized in skill_counts:
+
+            skill_counts[normalized]["count"] += 1
+
+        else:
+
+            skill_counts[normalized] = {
+                "name": skill_name,
+                "count": 1
+            }
+
+
+    # Sort skills by frequency
+
+    sorted_skills = sorted(
+        skill_counts.values(),
+        key=lambda x: x["count"],
+        reverse=True
+    )
+
+
+    # Show top 10 skills
+
+    top_skills = [
+        (item["name"], item["count"])
+        for item in sorted_skills[:10]
+    ]
+
+
+    if top_skills:
+
+        max_skill_count = max(
+            count for skill, count in top_skills
+        )
+
+    else:
+
+        max_skill_count = 0
+
+
+    total_skills = len(all_skills)
+
+
+    # ---------------- ATS CHART ----------------
+
+    ats_labels = []
+
+    ats_values = []
+
+    for index, value in enumerate(ats_scores):
+
+        ats_labels.append(
+            f"Resume {index + 1}"
+        )
+
+        ats_values.append(value)
+
+
+    # ---------------- RESUME SCORE CHART ----------------
+
+    resume_labels = []
+
+    resume_values = []
+
+    for index, value in enumerate(resume_scores):
+
+        resume_labels.append(
+            f"Resume {index + 1}"
+        )
+
+        resume_values.append(value)
+
+
+    # ---------------- CAREER CHART ----------------
+
+    career_labels = list(
+        career_data.keys()
+    )
+
+    career_values = list(
+        career_data.values()
+    )
+
+
+    # ---------------- RENDER PAGE ----------------
+
+    return render_template(
+        "admin_skill_analytics.html",
+
+        total_resumes=total_resumes,
+
+        avg_ats=avg_ats,
+
+        avg_resume=avg_resume,
+
+        total_skills=total_skills,
+
+        top_skills=top_skills,
+
+        max_skill_count=max_skill_count,
+
+        ats_labels=ats_labels,
+
+        ats_values=ats_values,
+
+        resume_labels=resume_labels,
+
+        resume_values=resume_values,
+
+        career_labels=career_labels,
+
+        career_values=career_values
+    )
+
+# ---------------- ADMIN DELETE USER ----------------
+@app.route("/admin/users/delete/<int:user_id>")
+@login_required
+def admin_delete_user(user_id):
+
+    # Only admin can access
+    if session.get("user_role") != "admin":
+        return "Access Denied! Admins only.", 403
+
+    connection = sqlite3.connect(DATABASE)
+    cursor = connection.cursor()
+
+    # Get user's email and role first
+    cursor.execute(
+        "SELECT email, role FROM users WHERE id=?",
+        (user_id,)
+    )
+
+    user = cursor.fetchone()
+
+    if not user:
+        connection.close()
+        return "User not found.", 404
+
+    email = user[0]
+    role = user[1]
+
+    # Never allow an admin account to be deleted
+    if role == "admin":
+        connection.close()
+        return "Admin account cannot be deleted.", 403
+
+    # Delete user
+    cursor.execute(
+        "DELETE FROM users WHERE id=?",
+        (user_id,)
+    )
+
+    connection.commit()
+    connection.close()
+
+    return redirect(url_for("admin_users"))
 
 # ---------------- ATS ANALYSIS ----------------
 
@@ -498,6 +2063,13 @@ def upload():
     ))
 
     connection.commit()
+    
+    log_activity(
+        email,
+        "Resume Uploaded",
+        f"Uploaded resume: {filename}"
+    )
+    
     connection.close()
 
     # ---------------- GENERATE REPORT ----------------
@@ -812,6 +2384,13 @@ WHERE email=?
                     ends[i]
                 ))
         connection.commit()
+        
+        log_activity(
+            email,
+            "Profile Updated",
+            "User profile and education details updated"
+        )
+        
         connection.close()
         return redirect(url_for("profile"))
 

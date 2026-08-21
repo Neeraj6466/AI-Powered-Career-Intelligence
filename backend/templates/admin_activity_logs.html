@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Activity Logs - Admin</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f5f6fa;
+            padding: 30px;
+            color: #111827;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+        }
+
+        .back {
+            text-decoration: none;
+            background: #4f46e5;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 8px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 14px;
+            border-bottom: 1px solid #e5e7eb;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background: #f9fafb;
+        }
+
+        .action {
+            font-weight: bold;
+            color: #4f46e5;
+        }
+
+        .details {
+            max-width: 400px;
+            line-height: 1.5;
+            color: #4b5563;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 35px;
+            color: #6b7280;
+        }
+
+        @media (max-width: 700px) {
+
+            body {
+                padding: 15px;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+
+    <!-- HEADER -->
+
+    <div class="header">
+
+        <h1>📋 Activity Logs</h1>
+
+        <a href="{{ url_for('admin_dashboard') }}"
+           class="back">
+
+            ← Admin Dashboard
+
+        </a>
+
+    </div>
+
+
+    <!-- ACTIVITY LOGS -->
+
+    <div class="card">
+
+        {% if logs %}
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>ID</th>
+
+                    <th>User</th>
+
+                    <th>Action</th>
+
+                    <th>Details</th>
+
+                    <th>Date</th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for log in logs %}
+
+                <tr>
+
+                    <td>
+                        {{ log[0] }}
+                    </td>
+
+                    <td>
+                        {{ log[1] or "System" }}
+                    </td>
+
+                    <td class="action">
+                        {{ log[2] }}
+                    </td>
+
+                    <td class="details">
+                        {{ log[3] or "-" }}
+                    </td>
+
+                    <td>
+                        {{ log[4] }}
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+        {% else %}
+
+        <div class="empty">
+
+            📋 No activity logs available yet.
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+
+</div>
+
+</body>
+
+</html>

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Edit Announcement - Admin</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f5f6fa;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            color: #111827;
+        }
+
+        .back {
+            text-decoration: none;
+            background: #6b7280;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 8px;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+        }
+
+        .announcement-id {
+            color: #6b7280;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 7px;
+            font-weight: bold;
+            color: #374151;
+        }
+
+        input,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 7px;
+            font-size: 15px;
+        }
+
+        textarea {
+            min-height: 180px;
+            resize: vertical;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #4f46e5;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 25px;
+        }
+
+        .update-btn {
+            background: #4f46e5;
+            color: white;
+            border: none;
+            padding: 12px 22px;
+            border-radius: 7px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        .update-btn:hover {
+            background: #4338ca;
+        }
+
+        .cancel-btn {
+            background: #6b7280;
+            color: white;
+            text-decoration: none;
+            padding: 12px 22px;
+            border-radius: 7px;
+        }
+
+        .cancel-btn:hover {
+            background: #4b5563;
+        }
+
+        @media (max-width: 600px) {
+
+            body {
+                padding: 15px;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+            .buttons {
+                flex-direction: column;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+
+    <!-- HEADER -->
+
+    <div class="header">
+
+        <h1>
+            ✏️ Edit Announcement
+        </h1>
+
+        <a
+            href="{{ url_for('admin_announcements') }}"
+            class="back"
+        >
+            ← Back to Announcements
+        </a>
+
+    </div>
+
+
+    <!-- EDIT FORM -->
+
+    <div class="card">
+
+        <p class="announcement-id">
+            Announcement ID: {{ announcement[0] }}
+        </p>
+
+
+        <form
+            method="POST"
+            action="{{ url_for(
+                'edit_admin_announcement',
+                announcement_id=announcement[0]
+            ) }}"
+        >
+
+
+            <!-- TITLE -->
+
+            <div class="form-group">
+
+                <label>
+                    Announcement Title
+                </label>
+
+                <input
+                    type="text"
+                    name="title"
+                    value="{{ announcement[1] }}"
+                    required
+                >
+
+            </div>
+
+
+            <!-- MESSAGE -->
+
+            <div class="form-group">
+
+                <label>
+                    Announcement Message
+                </label>
+
+                <textarea
+                    name="message"
+                    required
+                >{{ announcement[2] }}</textarea>
+
+            </div>
+
+
+            <!-- BUTTONS -->
+
+            <div class="buttons">
+
+                <button
+                    type="submit"
+                    class="update-btn"
+                >
+                    🔄 Update Announcement
+                </button>
+
+
+                <a
+                    href="{{ url_for('admin_announcements') }}"
+                    class="cancel-btn"
+                >
+                    Cancel
+                </a>
+
+            </div>
+
+
+        </form>
+
+    </div>
+
+
+</div>
+
+</body>
+
+</html>

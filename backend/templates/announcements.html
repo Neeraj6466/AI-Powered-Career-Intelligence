@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Announcements - CareerAI</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f5f6fa;
+            color: #111827;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+        }
+
+        .back {
+            text-decoration: none;
+            background: #4f46e5;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 8px;
+        }
+
+        .announcement {
+            background: white;
+            padding: 22px;
+            border-radius: 12px;
+            margin-bottom: 18px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+            border-left: 4px solid #4f46e5;
+        }
+
+        .announcement h2 {
+            font-size: 19px;
+            margin-bottom: 10px;
+        }
+
+        .announcement p {
+            color: #4b5563;
+            line-height: 1.7;
+            margin-bottom: 12px;
+        }
+
+        .date {
+            color: #9ca3af;
+            font-size: 12px;
+        }
+
+        .empty {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            text-align: center;
+            color: #6b7280;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+        }
+
+        @media (max-width: 700px) {
+
+            body {
+                padding: 15px;
+            }
+
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+
+    <!-- HEADER -->
+
+    <div class="header">
+
+        <h1>📢 Announcements</h1>
+
+        <a href="{{ url_for('dashboard') }}"
+           class="back">
+
+            ← Dashboard
+
+        </a>
+
+    </div>
+
+
+    <!-- ANNOUNCEMENTS -->
+
+    {% if announcements %}
+
+        {% for announcement in announcements %}
+
+        <div class="announcement">
+
+            <h2>
+                📢 {{ announcement[1] }}
+            </h2>
+
+            <p>
+                {{ announcement[2] }}
+            </p>
+
+            <div class="date">
+
+                Published:
+                {{ announcement[3] }}
+
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    {% else %}
+
+        <div class="empty">
+
+            <h2>📢 No Announcements</h2>
+
+            <p style="margin-top:10px;">
+                There are no new announcements at the moment.
+            </p>
+
+        </div>
+
+    {% endif %}
+
+
+</div>
+
+</body>
+
+</html>

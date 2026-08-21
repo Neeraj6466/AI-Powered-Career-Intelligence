@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>System & API - Admin</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f5f6fa;
+            color: #111827;
+        }
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 240px;
+            background: #111827;
+            color: white;
+            padding: 25px 15px;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 35px;
+            padding-left: 10px;
+        }
+
+        .menu-title {
+            font-size: 11px;
+            color: #9ca3af;
+            margin: 20px 10px 8px;
+            text-transform: uppercase;
+        }
+
+        .menu a {
+            display: block;
+            padding: 12px 15px;
+            margin: 5px 0;
+            border-radius: 8px;
+            color: #d1d5db;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .menu a:hover,
+        .menu a.active {
+            background: #4f46e5;
+            color: white;
+        }
+
+        .main {
+            flex: 1;
+            padding: 30px;
+        }
+
+        .topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .topbar h1 {
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #6b7280;
+            margin-top: 6px;
+        }
+
+        .back {
+            background: #4f46e5;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 8px;
+            text-decoration: none;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+        }
+
+        .card {
+            background: white;
+            padding: 22px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+        }
+
+        .card-title {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .status {
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .online {
+            color: #16a34a;
+        }
+
+        .warning {
+            color: #d97706;
+        }
+
+        .offline {
+            color: #dc2626;
+        }
+
+        .section {
+            background: white;
+            margin-top: 25px;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+        }
+
+        .section h2 {
+            margin-bottom: 20px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 14px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .label {
+            color: #6b7280;
+        }
+
+        .value {
+            font-weight: bold;
+        }
+
+        .badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .badge-online {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-offline {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .refresh {
+            margin-top: 20px;
+            background: #4f46e5;
+            color: white;
+            border: none;
+            padding: 11px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .refresh:hover {
+            opacity: 0.9;
+        }
+
+        @media (max-width: 1000px) {
+
+            .cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+        }
+
+        @media (max-width: 650px) {
+
+            .layout {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+            }
+
+            .main {
+                padding: 15px;
+            }
+
+            .cards {
+                grid-template-columns: 1fr;
+            }
+
+            .topbar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="layout">
+
+
+    <!-- SIDEBAR -->
+
+    <aside class="sidebar">
+
+        <div class="logo">
+            🤖 CareerAI
+        </div>
+
+
+        <div class="menu-title">
+            Operations & Analytics
+        </div>
+
+        <div class="menu">
+
+            <a href="{{ url_for('admin_dashboard') }}">
+                📊 Overview
+            </a>
+
+            <a href="{{ url_for('admin_jobs') }}">
+                💼 Job Postings
+            </a>
+
+            <a href="{{ url_for('admin_courses') }}">
+                📚 Courses
+            </a>
+
+            <a href="{{ url_for('admin_announcements') }}">
+                📢 Announcements
+            </a>
+
+        </div>
+
+
+        <div class="menu-title">
+            Users & Support
+        </div>
+
+        <div class="menu">
+
+            <a href="{{ url_for('admin_users') }}">
+                👥 User Directory
+            </a>
+
+            <a href="{{ url_for('admin_resumes') }}">
+                📄 Resumes & Parsing
+            </a>
+
+            <a href="{{ url_for('admin_feedback') }}">
+                💬 Feedback & Bugs
+            </a>
+
+        </div>
+
+
+        <div class="menu-title">
+            System & Data
+        </div>
+
+        <div class="menu">
+
+            <a href="{{ url_for('admin_skill_analytics') }}">
+                📈 Skill & ATS Analytics
+            </a>
+
+            <a href="{{ url_for('admin_activity_logs') }}">
+                📝 Activity Logs
+            </a>
+
+            <a href="{{ url_for('admin_system_api') }}"
+               class="active">
+
+                ⚙️ System & API
+
+            </a>
+
+        </div>
+
+    </aside>
+
+
+    <!-- MAIN -->
+
+    <main class="main">
+
+
+        <div class="topbar">
+
+            <div>
+
+                <h1>
+                    ⚙️ System & API Monitoring
+                </h1>
+
+                <p class="subtitle">
+                    Monitor application health, database and AI services
+                </p>
+
+            </div>
+
+
+            <a href="{{ url_for('admin_dashboard') }}"
+               class="back">
+
+                ← Admin Dashboard
+
+            </a>
+
+        </div>
+
+
+        <!-- STATUS CARDS -->
+
+        <div class="cards">
+
+
+            <div class="card">
+
+                <div class="card-title">
+                    🖥️ Application
+                </div>
+
+                <div class="status online">
+                    {{ application_status }}
+                </div>
+
+            </div>
+
+
+            <div class="card">
+
+                <div class="card-title">
+                    🗄️ Database
+                </div>
+
+                <div class="status {{ database_class }}">
+                    {{ database_status }}
+                </div>
+
+            </div>
+
+
+            <div class="card">
+
+                <div class="card-title">
+                    📁 Upload Storage
+                </div>
+
+                <div class="status {{ upload_class }}">
+                    {{ upload_status }}
+                </div>
+
+            </div>
+
+
+            <div class="card">
+
+                <div class="card-title">
+                    🤖 AI Service
+                </div>
+
+                <div class="status {{ ai_class }}">
+                    {{ ai_status }}
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- SYSTEM INFORMATION -->
+
+        <div class="section">
+
+            <h2>
+                📊 System Information
+            </h2>
+
+
+            <div class="info-row">
+
+                <span class="label">
+                    Application
+                </span>
+
+                <span class="value">
+                    AI Career Intelligence
+                </span>
+
+            </div>
+
+
+            <div class="info-row">
+
+                <span class="label">
+                    Database
+                </span>
+
+                <span class="value">
+                    SQLite
+                </span>
+
+            </div>
+
+
+            <div class="info-row">
+
+                <span class="label">
+                    Database Path
+                </span>
+
+                <span class="value">
+                    {{ database_path }}
+                </span>
+
+            </div>
+
+
+            <div class="info-row">
+
+                <span class="label">
+                    Upload Folder
+                </span>
+
+                <span class="value">
+                    {{ upload_path }}
+                </span>
+
+            </div>
+
+
+            <div class="info-row">
+
+                <span class="label">
+                    Uploaded Files
+                </span>
+
+                <span class="value">
+                    {{ uploaded_files }}
+                </span>
+
+            </div>
+
+
+            <div class="info-row">
+
+                <span class="label">
+                    Platform
+                </span>
+
+                <span class="value">
+                    {{ platform }}
+                </span>
+
+            </div>
+
+
+            <div class="info-row">
+
+                <span class="label">
+                    Python Version
+                </span>
+
+                <span class="value">
+                    {{ python_version }}
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- API SERVICES -->
+
+        <div class="section">
+
+            <h2>
+                🔌 API & Services
+            </h2>
+
+
+            <div class="info-row">
+
+                <span class="label">
+                    🤖 Gemini AI
+                </span>
+
+                <span class="badge {{ ai_badge_class }}">
+                    {{ ai_detail }}
+                </span>
+
+            </div>
+
+
+            <div class="info-row">
+
+                <span class="label">
+                    📄 Resume Parser
+                </span>
+
+                <span class="badge badge-online">
+                    AVAILABLE
+                </span>
+
+            </div>
+
+
+            <div class="info-row">
+
+                <span class="label">
+                    🧠 Skill Extractor
+                </span>
+
+                <span class="badge badge-online">
+                    AVAILABLE
+                </span>
+
+            </div>
+
+
+            <div class="info-row">
+
+                <span class="label">
+                    🎯 ATS Analyzer
+                </span>
+
+                <span class="badge badge-online">
+                    AVAILABLE
+                </span>
+
+            </div>
+
+
+            <div class="info-row">
+
+                <span class="label">
+                    💼 Career Recommendation
+                </span>
+
+                <span class="badge badge-online">
+                    AVAILABLE
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <button
+            class="refresh"
+            onclick="window.location.reload()">
+
+            🔄 Refresh Status
+
+        </button>
+
+
+    </main>
+
+</div>
+
+</body>
+
+</html>

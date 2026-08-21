@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>User Directory - Admin</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f5f6fa;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        h1 {
+            color: #111827;
+        }
+
+        .back {
+            text-decoration: none;
+            background: #4f46e5;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 8px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 14px;
+            border-bottom: 1px solid #e5e7eb;
+            text-align: left;
+        }
+
+        th {
+            background: #f9fafb;
+            color: #374151;
+        }
+
+        tr:hover {
+            background: #f9fafb;
+        }
+
+        .role {
+            background: #e0e7ff;
+            color: #3730a3;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+        }
+
+        .user {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .view-btn {
+            text-decoration: none;
+            background: #4f46e5;
+            color: white;
+            padding: 7px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            display: inline-block;
+        }
+
+        .delete-btn {
+    text-decoration: none;
+    background: #dc2626;
+    color: white;
+    padding: 7px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    display: inline-block;
+    margin-left: 5px;
+}
+
+.delete-btn:hover {
+    background: #b91c1c;
+}
+
+        .view-btn:hover {
+            background: #4338ca;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 30px;
+            color: #6b7280;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="container">
+
+    <!-- HEADER -->
+
+    <div class="header">
+
+        <h1>👥 User Directory</h1>
+
+        <a href="{{ url_for('admin_dashboard') }}"
+           class="back">
+
+            ← Admin Dashboard
+
+        </a>
+
+    </div>
+
+
+    <!-- USERS TABLE -->
+
+    <div class="card">
+
+        {% if users %}
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>ID</th>
+
+                    <th>Full Name</th>
+
+                    <th>Email</th>
+
+                    <th>Career Interest</th>
+
+                    <th>Role</th>
+
+                    <th>Action</th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                {% for user in users %}
+
+                <tr>
+
+                    <!-- ID -->
+
+                    <td>
+                        {{ user[0] }}
+                    </td>
+
+
+                    <!-- FULL NAME -->
+
+                    <td>
+                        {{ user[1] }}
+                    </td>
+
+
+                    <!-- EMAIL -->
+
+                    <td>
+                        {{ user[2] }}
+                    </td>
+
+
+                    <!-- CAREER -->
+
+                    <td>
+                        {{ user[3] or "Not specified" }}
+                    </td>
+
+
+                    <!-- ROLE -->
+
+                    <td>
+
+                        {% if user[4] == "admin" %}
+
+                        <span class="role">
+                            Admin
+                        </span>
+
+                        {% else %}
+
+                        <span class="role user">
+                            User
+                        </span>
+
+                        {% endif %}
+
+                    </td>
+
+
+                    <!-- ACTION -->
+
+                    <td>
+
+    <a href="{{ url_for('admin_user_details', user_id=user[0]) }}"
+       class="view-btn">
+
+        👁️ View
+
+    </a>
+
+
+    <a href="{{ url_for('admin_delete_user', user_id=user[0]) }}"
+       class="delete-btn"
+       onclick="return confirm('Are you sure you want to delete this user?');">
+
+        🗑️ Delete
+
+    </a>
+
+</td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+        {% else %}
+
+        <div class="empty">
+
+            No registered users found.
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+</body>
+
+</html>
